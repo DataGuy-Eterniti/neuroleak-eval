@@ -31,7 +31,7 @@ def run_script(code: str, workspace: Path, timeout: int = 600, args: list[str] |
     script = workspace / "solution.py"
     script.write_text(code)
     try:
-        p = subprocess.run([sys.executable, "-I", str(script), *(args or [])], cwd=workspace,
+        p = subprocess.run([sys.executable, "-P", str(script), *(args or [])], cwd=workspace,
                            capture_output=True, text=True, timeout=timeout)
         return {"returncode": p.returncode, "stdout": p.stdout[-4000:],
                 "stderr": p.stderr[-4000:], "timeout": False}

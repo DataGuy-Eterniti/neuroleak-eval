@@ -116,7 +116,7 @@ python validate_graders.py --seeds 10
 | Prefix | Provider | Key (environment variable) |
 |---|---|---|
 | `gemini:` | Google AI Studio | `GEMINI_API_KEY` |
-| `github:` | GitHub Models (fine-grained token with *Models: read*) | `GITHUB_MODELS_TOKEN` |
+| `github:` | GitHub Models (fine-grained token with *Models: read*) | `MODELS_TOKEN` |
 | `openrouter:` (default) | OpenRouter, including `...:free` models | `OPENROUTER_API_KEY` |
 | `groq:` | Groq | `GROQ_API_KEY` |
 | `nvidia:` | NVIDIA build.nvidia.com | `NVIDIA_API_KEY` |

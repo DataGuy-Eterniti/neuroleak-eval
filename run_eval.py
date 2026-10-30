@@ -74,7 +74,7 @@ def make_client(provider: str):
     key = os.environ.get(env)
     if not key:
         raise SystemExit(f"Set {env} (Codespaces secret or .env) to use provider '{provider}'.")
-    return OpenAI(base_url=base, api_key=key)
+    return OpenAI(base_url=base, api_key=key, timeout=900, max_retries=0)
 
 
 def chat(client, model, messages, temperature, max_tokens, provider="openrouter"):

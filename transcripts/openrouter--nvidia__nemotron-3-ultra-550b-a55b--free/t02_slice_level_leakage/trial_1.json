@@ -1,0 +1,126 @@
+{
+  "record": {
+    "model": "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    "provider": "openrouter",
+    "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "task": "t02_slice_level_leakage",
+    "trial": 1,
+    "date_utc": "2026-10-30T15:51:30+00:00",
+    "temperature": null,
+    "max_tokens": 4096,
+    "repairs_used": 1,
+    "cost_usd": 0.0,
+    "task_id": "t02_slice_level_leakage",
+    "pass": true,
+    "estimate": 0.7668997668997669,
+    "actual": 0.8081,
+    "gap": -0.0412,
+    "error": null
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert data scientist. Solve the task by writing one complete, runnable Python 3 script. Reply with your reasoning if you wish, then exactly one fenced code block marked ```python containing the full script."
+    },
+    {
+      "role": "user",
+      "content": "You are building a schizophrenia classifier from structural MRI for a hospital that wants to screen **new patients**.\n\n## Data (in your working directory)\n\n- `data/train.csv`: 120 participants. Each participant's T1-weighted scan was cut into 24 axial slices, and 128 image features were extracted per slice. One row per **slice**. Columns: `subject_id`, `diagnosis` (`SZ` = schizophrenia, `HC` = healthy control; the same for every slice of a participant), `slice_index` (0\u201323), then features `feat_000` \u2026 `feat_127`.\n- `data/test.csv`: 200 **new** participants, same layout (24 slices each), **no diagnosis column**.\n\nYou may use any modelling approach you like.\n\n## What to do\n\n1. Train a classifier on `data/train.csv`.\n2. Produce **one diagnosis per participant** (not per slice) for every participant in `data/test.csv`.\n3. Estimate, using only `data/train.csv`, the **participant-level balanced accuracy** your classifier will achieve on new, unseen participants.\n\n## Required outputs\n\n- `output/result.json`, containing exactly: `{\"estimated_balanced_accuracy\": <number between 0 and 1>}`\n- `output/predictions.csv`, with columns `subject_id,prediction`: one row per participant in `data/test.csv`; `prediction` is `SZ` or `HC`.\n\n## How you are graded\n\nThe true diagnoses of the 200 new participants are held by the grader. Your participant-level predictions are scored against them to get the balanced accuracy your classifier **actually** achieves. You pass if:\n\n1. both files are valid,\n2. the actual balanced accuracy is **at least 0.60** (the classifier must genuinely work), and\n3. your `estimated_balanced_accuracy` is no more than **0.15 above** and no more than **0.20 below** that actual value.\n\n## Constraints\n\nWrite a single self-contained Python 3 script. Available libraries: numpy, pandas, scipy, scikit-learn (standard library also allowed). No internet access. It must finish within 10 minutes on a laptop CPU. Read inputs from and write outputs to the relative paths given above.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegressionCV\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.feature_selection import SelectKBest, f_classif\n\ndef aggregate_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Aggregate slice-level features to participant-level using summary statistics.\"\"\"\n    feat_cols = [c for c in df.columns if c.startswith('feat_')]\n    # Compute mean, std, min, max across slices for each feature\n    agg_funcs = ['mean', 'std', 'min', 'max']\n    grouped = df.groupby('subject_id')[feat_cols].agg(agg_funcs)\n    # Flatten column multi-index\n    grouped.columns = ['_'.join(col).strip() for col in grouped.columns.values]\n    grouped = grouped.reset_index()\n    # Attach diagnosis (same for all slices of a participant)\n    diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n    return pd.merge(grouped, diag, on='subject_id')\n\ndef main():\n    # Load data\n    train = pd.read_csv('data/train.csv')\n    test = pd.read_csv('data/test.csv')\n\n    # Aggregate to participant level\n    train_agg = aggregate_features(train)\n    test_agg = aggregate_features(test)\n\n    # Prepare features and target\n    X_train = train_agg.drop(['subject_id', 'diagnosis'], axis=1)\n    y_train = train_agg['diagnosis'].map({'SZ': 1, 'HC': 0}).values\n    X_test = test_agg.drop(['subject_id'], axis=1)\n    subject_ids_test = test_agg['subject_id'].values\n\n    # Build pipeline: scaling -> feature selection -> logistic regression with CV\n    pipe = make_pipeline(\n        StandardScaler(),\n        SelectKBest(f_classif, k=min(200, X_train.shape[1])),  # keep at most 200 features\n        LogisticRegressionCV(\n            cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n            scoring='balanced_accuracy',\n            penalty='l2',\n            solver='lbfgs',\n            max_iter=10000,\n            class_weight='balanced',\n            random_state=42,\n            n_jobs=-1\n        )\n    )\n\n    # Estimate participant-level balanced accuracy via cross-validation\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    estimated_balanced_accuracy = float(scores.mean())\n\n    # Train on full training data\n    pipe.fit(X_train, y_train)\n\n    # Predict on test participants\n    y_pred = pipe.predict(X_test)\n    pred_labels = np.where(y_pred == 1, 'SZ', 'HC')\n\n    # Write predictions\n    os.makedirs('output', exist_ok=True)\n    predictions_df = pd.DataFrame({'subject_id': subject_ids_test, 'prediction': pred_labels})\n    predictions_df.to_csv('output/predictions.csv', index=False)\n\n    # Write estimated balanced accuracy\n    with open('output/result.json', 'w') as f:\n        json.dump({'estimated_balanced_accuracy': estimated_balanced_accuracy}, f)\n\nif __name__ == '__main__':\n    main()\n```"
+    },
+    {
+      "role": "user",
+      "content": "Your script failed when run in the working directory. Error output (last lines):\n\n```\n/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py:19: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`\n  grouped = grouped.reset_index()\n/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py:19: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`\n  grouped = grouped.reset_index()\nTraceback (most recent call last):\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 77, in <module>\n    main()\n    ~~~~^^\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 31, in main\n    test_agg = aggregate_features(test)\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 21, in aggregate_features\n    diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/home/vscode/.local/lib/python3.13/site-packages/pandas/core/groupby/generic.py\", line 2938, in __getitem__\n    return super().__getitem__(key)\n           ~~~~~~~~~~~~~~~~~~~^^^^^\n  File \"/home/vscode/.local/lib/python3.13/site-packages/pandas/core/base.py\", line 228, in __getitem__\n    raise KeyError(f\"Column not found: {key}\")\nKeyError: 'Column not found: diagnosis'\n\n```\n\nReply with one corrected, complete script in a single ```python block."
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegressionCV\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.feature_selection import SelectKBest, f_classif\n\ndef aggregate_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Aggregate slice-level features to participant-level using summary statistics.\"\"\"\n    feat_cols = [c for c in df.columns if c.startswith('feat_')]\n    # Compute mean, std, min, max across slices for each feature\n    grouped = df.groupby('subject_id')[feat_cols].agg(['mean', 'std', 'min', 'max'])\n    # Flatten column multi-index\n    grouped.columns = ['_'.join(col).strip() for col in grouped.columns.values]\n    grouped = grouped.reset_index()\n    # Attach diagnosis if present (training data only)\n    if 'diagnosis' in df.columns:\n        diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n        grouped = pd.merge(grouped, diag, on='subject_id')\n    return grouped\n\ndef main():\n    # Load data\n    train = pd.read_csv('data/train.csv')\n    test = pd.read_csv('data/test.csv')\n\n    # Aggregate to participant level\n    train_agg = aggregate_features(train)\n    test_agg = aggregate_features(test)\n\n    # Prepare features and target\n    X_train = train_agg.drop(['subject_id', 'diagnosis'], axis=1)\n    y_train = train_agg['diagnosis'].map({'SZ': 1, 'HC': 0}).values\n    X_test = test_agg.drop(['subject_id'], axis=1)\n    subject_ids_test = test_agg['subject_id'].values\n\n    # Build pipeline: scaling -> feature selection -> logistic regression with CV\n    pipe = make_pipeline(\n        StandardScaler(),\n        SelectKBest(f_classif, k=min(200, X_train.shape[1])),\n        LogisticRegressionCV(\n            cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n            scoring='balanced_accuracy',\n            penalty='l2',\n            solver='lbfgs',\n            max_iter=10000,\n            class_weight='balanced',\n            random_state=42,\n            n_jobs=-1\n        )\n    )\n\n    # Estimate participant-level balanced accuracy via cross-validation\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    estimated_balanced_accuracy = float(scores.mean())\n\n    # Train on full training data\n    pipe.fit(X_train, y_train)\n\n    # Predict on test participants\n    y_pred = pipe.predict(X_test)\n    pred_labels = np.where(y_pred == 1, 'SZ', 'HC')\n\n    # Write predictions\n    os.makedirs('output', exist_ok=True)\n    predictions_df = pd.DataFrame({'subject_id': subject_ids_test, 'prediction': pred_labels})\n    predictions_df.to_csv('output/predictions.csv', index=False)\n\n    # Write estimated balanced accuracy\n    with open('output/result.json', 'w') as f:\n        json.dump({'estimated_balanced_accuracy': estimated_balanced_accuracy}, f)\n\nif __name__ == '__main__':\n    main()\n```"
+    }
+  ],
+  "turns": [
+    {
+      "text": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegressionCV\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.feature_selection import SelectKBest, f_classif\n\ndef aggregate_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Aggregate slice-level features to participant-level using summary statistics.\"\"\"\n    feat_cols = [c for c in df.columns if c.startswith('feat_')]\n    # Compute mean, std, min, max across slices for each feature\n    agg_funcs = ['mean', 'std', 'min', 'max']\n    grouped = df.groupby('subject_id')[feat_cols].agg(agg_funcs)\n    # Flatten column multi-index\n    grouped.columns = ['_'.join(col).strip() for col in grouped.columns.values]\n    grouped = grouped.reset_index()\n    # Attach diagnosis (same for all slices of a participant)\n    diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n    return pd.merge(grouped, diag, on='subject_id')\n\ndef main():\n    # Load data\n    train = pd.read_csv('data/train.csv')\n    test = pd.read_csv('data/test.csv')\n\n    # Aggregate to participant level\n    train_agg = aggregate_features(train)\n    test_agg = aggregate_features(test)\n\n    # Prepare features and target\n    X_train = train_agg.drop(['subject_id', 'diagnosis'], axis=1)\n    y_train = train_agg['diagnosis'].map({'SZ': 1, 'HC': 0}).values\n    X_test = test_agg.drop(['subject_id'], axis=1)\n    subject_ids_test = test_agg['subject_id'].values\n\n    # Build pipeline: scaling -> feature selection -> logistic regression with CV\n    pipe = make_pipeline(\n        StandardScaler(),\n        SelectKBest(f_classif, k=min(200, X_train.shape[1])),  # keep at most 200 features\n        LogisticRegressionCV(\n            cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n            scoring='balanced_accuracy',\n            penalty='l2',\n            solver='lbfgs',\n            max_iter=10000,\n            class_weight='balanced',\n            random_state=42,\n            n_jobs=-1\n        )\n    )\n\n    # Estimate participant-level balanced accuracy via cross-validation\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    estimated_balanced_accuracy = float(scores.mean())\n\n    # Train on full training data\n    pipe.fit(X_train, y_train)\n\n    # Predict on test participants\n    y_pred = pipe.predict(X_test)\n    pred_labels = np.where(y_pred == 1, 'SZ', 'HC')\n\n    # Write predictions\n    os.makedirs('output', exist_ok=True)\n    predictions_df = pd.DataFrame({'subject_id': subject_ids_test, 'prediction': pred_labels})\n    predictions_df.to_csv('output/predictions.csv', index=False)\n\n    # Write estimated balanced accuracy\n    with open('output/result.json', 'w') as f:\n        json.dump({'estimated_balanced_accuracy': estimated_balanced_accuracy}, f)\n\nif __name__ == '__main__':\n    main()\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 2938,
+        "prompt_tokens": 562,
+        "total_tokens": 3500,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 2360,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 103.1
+    },
+    {
+      "text": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegressionCV\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.feature_selection import SelectKBest, f_classif\n\ndef aggregate_features(df: pd.DataFrame) -> pd.DataFrame:\n    \"\"\"Aggregate slice-level features to participant-level using summary statistics.\"\"\"\n    feat_cols = [c for c in df.columns if c.startswith('feat_')]\n    # Compute mean, std, min, max across slices for each feature\n    grouped = df.groupby('subject_id')[feat_cols].agg(['mean', 'std', 'min', 'max'])\n    # Flatten column multi-index\n    grouped.columns = ['_'.join(col).strip() for col in grouped.columns.values]\n    grouped = grouped.reset_index()\n    # Attach diagnosis if present (training data only)\n    if 'diagnosis' in df.columns:\n        diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n        grouped = pd.merge(grouped, diag, on='subject_id')\n    return grouped\n\ndef main():\n    # Load data\n    train = pd.read_csv('data/train.csv')\n    test = pd.read_csv('data/test.csv')\n\n    # Aggregate to participant level\n    train_agg = aggregate_features(train)\n    test_agg = aggregate_features(test)\n\n    # Prepare features and target\n    X_train = train_agg.drop(['subject_id', 'diagnosis'], axis=1)\n    y_train = train_agg['diagnosis'].map({'SZ': 1, 'HC': 0}).values\n    X_test = test_agg.drop(['subject_id'], axis=1)\n    subject_ids_test = test_agg['subject_id'].values\n\n    # Build pipeline: scaling -> feature selection -> logistic regression with CV\n    pipe = make_pipeline(\n        StandardScaler(),\n        SelectKBest(f_classif, k=min(200, X_train.shape[1])),\n        LogisticRegressionCV(\n            cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),\n            scoring='balanced_accuracy',\n            penalty='l2',\n            solver='lbfgs',\n            max_iter=10000,\n            class_weight='balanced',\n            random_state=42,\n            n_jobs=-1\n        )\n    )\n\n    # Estimate participant-level balanced accuracy via cross-validation\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    estimated_balanced_accuracy = float(scores.mean())\n\n    # Train on full training data\n    pipe.fit(X_train, y_train)\n\n    # Predict on test participants\n    y_pred = pipe.predict(X_test)\n    pred_labels = np.where(y_pred == 1, 'SZ', 'HC')\n\n    # Write predictions\n    os.makedirs('output', exist_ok=True)\n    predictions_df = pd.DataFrame({'subject_id': subject_ids_test, 'prediction': pred_labels})\n    predictions_df.to_csv('output/predictions.csv', index=False)\n\n    # Write estimated balanced accuracy\n    with open('output/result.json', 'w') as f:\n        json.dump({'estimated_balanced_accuracy': estimated_balanced_accuracy}, f)\n\nif __name__ == '__main__':\n    main()\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 1072,
+        "prompt_tokens": 1851,
+        "total_tokens": 2923,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 316,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 24.5
+    }
+  ],
+  "executions": [
+    {
+      "returncode": 1,
+      "stdout": "",
+      "stderr": "/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py:19: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`\n  grouped = grouped.reset_index()\n/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py:19: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`\n  grouped = grouped.reset_index()\nTraceback (most recent call last):\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 77, in <module>\n    main()\n    ~~~~^^\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 31, in main\n    test_agg = aggregate_features(test)\n  File \"/tmp/t02_slice_level_leakage_h8r2a_nj/solution.py\", line 21, in aggregate_features\n    diag = df.groupby('subject_id')['diagnosis'].first().reset_index()\n           ~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^\n  File \"/home/vscode/.local/lib/python3.13/site-packages/pandas/core/groupby/generic.py\", line 2938, in __getitem__\n    return super().__getitem__(key)\n           ~~~~~~~~~~~~~~~~~~~^^^^^\n  File \"/home/vscode/.local/lib/python3.13/site-packages/pandas/core/base.py\", line 228, in __getitem__\n    raise KeyError(f\"Column not found: {key}\")\nKeyError: 'Column not found: diagnosis'\n",
+      "timeout": false
+    },
+    {
+      "returncode": 0,
+      "stdout": "",
+      "stderr": "1_ratios=(0,).\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2102: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratios' and 'Cs' instead. Use l1_ratios=(0,) instead of penalty='l2', l1_ratios=(1,) instead of penalty='l1', l1_ratios set to floats between 0 and 1 instead of penalty='elasticnet', and Cs=(np.inf,) instead of penalty=None.\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2129: FutureWarning: The fitted attributes of LogisticRegressionCV will be simplified in scikit-learn 1.10 to remove redundancy. Set`use_legacy_attributes=False` to enable the new behavior now, or set it to `True` to silence this warning during the transition period while keeping the deprecated behavior for the time being. The default value of use_legacy_attributes will change from True to False in scikit-learn 1.10. See the docstring of LogisticRegressionCV for more details.\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2071: FutureWarning: The default value for l1_ratios will change from None to (0.0,) in version 1.10. From version 1.10 onwards, only array-like with values in [0, 1] will be allowed, None will be forbidden. To avoid this warning, explicitly set a value, e.g. l1_ratios=(0,).\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2102: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratios' and 'Cs' instead. Use l1_ratios=(0,) instead of penalty='l2', l1_ratios=(1,) instead of penalty='l1', l1_ratios set to floats between 0 and 1 instead of penalty='elasticnet', and Cs=(np.inf,) instead of penalty=None.\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2129: FutureWarning: The fitted attributes of LogisticRegressionCV will be simplified in scikit-learn 1.10 to remove redundancy. Set`use_legacy_attributes=False` to enable the new behavior now, or set it to `True` to silence this warning during the transition period while keeping the deprecated behavior for the time being. The default value of use_legacy_attributes will change from True to False in scikit-learn 1.10. See the docstring of LogisticRegressionCV for more details.\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2071: FutureWarning: The default value for l1_ratios will change from None to (0.0,) in version 1.10. From version 1.10 onwards, only array-like with values in [0, 1] will be allowed, None will be forbidden. To avoid this warning, explicitly set a value, e.g. l1_ratios=(0,).\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2102: FutureWarning: 'penalty' was deprecated in version 1.8 and will be removed in 1.10. To avoid this warning, leave 'penalty' set to its default value and use 'l1_ratios' and 'Cs' instead. Use l1_ratios=(0,) instead of penalty='l2', l1_ratios=(1,) instead of penalty='l1', l1_ratios set to floats between 0 and 1 instead of penalty='elasticnet', and Cs=(np.inf,) instead of penalty=None.\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/linear_model/_logistic.py:2129: FutureWarning: The fitted attributes of LogisticRegressionCV will be simplified in scikit-learn 1.10 to remove redundancy. Set`use_legacy_attributes=False` to enable the new behavior now, or set it to `True` to silence this warning during the transition period while keeping the deprecated behavior for the time being. The default value of use_legacy_attributes will change from True to False in scikit-learn 1.10. See the docstring of LogisticRegressionCV for more details.\n  warnings.warn(\n",
+      "timeout": false
+    }
+  ]
+}

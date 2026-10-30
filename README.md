@@ -111,14 +111,23 @@ pip install -r requirements.txt
 python validate_graders.py --seeds 10
 ```
 
-**Step 2: run models.** This needs an [OpenRouter](https://openrouter.ai) key, which gives one key for every provider.
+**Step 2: run models.** The harness works with any OpenAI-compatible API. These all have **free tiers**, which are enough for this eval (about 2 requests per trial):
+
+| Prefix | Provider | Key (environment variable) |
+|---|---|---|
+| `gemini:` | Google AI Studio | `GEMINI_API_KEY` |
+| `github:` | GitHub Models (fine-grained token with *Models: read*) | `GITHUB_MODELS_TOKEN` |
+| `openrouter:` (default) | OpenRouter, including `...:free` models | `OPENROUTER_API_KEY` |
+| `groq:` | Groq | `GROQ_API_KEY` |
+| `nvidia:` | NVIDIA build.nvidia.com | `NVIDIA_API_KEY` |
+
+In Codespaces, add keys as **Codespaces secrets** (github.com → Settings → Codespaces). Locally, copy `.env.example` to `.env` instead. Keys never go in the repository.
 
 ```bash
-cp .env.example .env             # paste your key into .env
-python run_eval.py --models <model-id-1>,<model-id-2> --trials 3
+python run_eval.py --models gemini:<model-id>,github:<model-id> --trials 3 --sleep 10
 ```
 
-Use model IDs exactly as listed at [openrouter.ai/models](https://openrouter.ai/models). The run produces:
+Copy model IDs exactly from each provider's model list. The run produces:
 
 - `results/runs.jsonl`: one row per trial (model as served, date, settings, estimate, actual, gap, cost)
 - `results/summary.md`: pass rate, pass@k and pass^k per model and per task

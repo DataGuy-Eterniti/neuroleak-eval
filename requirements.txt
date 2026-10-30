@@ -1,0 +1,8 @@
+# Tested with Python 3.13 (3.10+ should work)
+numpy==2.5.3
+pandas==3.0.5
+scikit-learn==1.9.1
+scipy==1.18.1
+tabulate==0.10.0
+openai==3.41.0
+python-dotenv==1.2.3

@@ -116,7 +116,6 @@ python validate_graders.py --seeds 10
 | Prefix | Provider | Key (environment variable) |
 |---|---|---|
 | `gemini:` | Google AI Studio | `GEMINI_API_KEY` |
-| `github:` | GitHub Models (fine-grained token with *Models: read*) | `MODELS_TOKEN` |
 | `openrouter:` (default) | OpenRouter, including `...:free` models | `OPENROUTER_API_KEY` |
 | `groq:` | Groq | `GROQ_API_KEY` |
 | `nvidia:` | NVIDIA build.nvidia.com | `NVIDIA_API_KEY` |
@@ -124,7 +123,7 @@ python validate_graders.py --seeds 10
 In Codespaces, add keys as **Codespaces secrets** (github.com → Settings → Codespaces). Locally, copy `.env.example` to `.env` instead. Keys never go in the repository.
 
 ```bash
-python run_eval.py --models gemini:<model-id>,github:<model-id> --trials 3 --sleep 10
+python run_eval.py --models nvidia:<model-id>,openrouter:<model-id> --trials 3 --sleep 10
 ```
 
 Copy model IDs exactly from each provider's model list. The run produces:

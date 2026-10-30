@@ -9,14 +9,13 @@ For each (model, task, trial):
 
 Models are written as  provider:model-id  (no prefix = openrouter). Free tiers:
     gemini:<id>      Google AI Studio key            -> GEMINI_API_KEY
-    github:<id>      GitHub Models (PAT, models:read) -> MODELS_TOKEN
     openrouter:<id>  OpenRouter ("...:free" models)   -> OPENROUTER_API_KEY
     groq:<id>        Groq                             -> GROQ_API_KEY
     nvidia:<id>      NVIDIA build.nvidia.com          -> NVIDIA_API_KEY
 
 Examples:
     python run_eval.py --models gemini:gemini-2.5-flash --trials 1 --sleep 10
-    python run_eval.py --models github:openai/gpt-4.1,gemini:gemini-2.5-pro --trials 3
+    python run_eval.py --models nvidia:moonshotai/kimi-k2.6,openrouter:nvidia/nemotron-3-ultra-550b-a55b:free --trials 3
     python run_eval.py --summarize          # rebuild results/summary.md from runs.jsonl
 
 Copy model IDs exactly from each provider's model list.
@@ -57,7 +56,6 @@ def extract_code(text: str) -> str | None:
 PROVIDERS = {  # name: (OpenAI-compatible base URL, environment variable holding the key)
     "openrouter": ("https://openrouter.ai/api/v1", "OPENROUTER_API_KEY"),
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GEMINI_API_KEY"),
-    "github": ("https://models.github.ai/inference", "MODELS_TOKEN"),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY"),
     "nvidia": ("https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY"),
 }

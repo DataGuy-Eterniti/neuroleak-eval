@@ -1,37 +1,261 @@
 task,solution,seed,expected,got,estimate,actual,gap,error
 t01_feature_selection_leakage,reference/t01_solve.py,0,PASS,PASS,0.4817857142857143,0.4976,-0.0158,
-t01_feature_selection_leakage,reference/t01_solve.py,1,PASS,PASS,0.45992063492063495,0.4976,-0.0377,
-t01_feature_selection_leakage,reference/t01_solve.py,2,PASS,PASS,0.42753968253968255,0.4976,-0.0701,
-t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,0,PASS,PASS,0.48075396825396827,0.4989,-0.0182,
-t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,1,PASS,PASS,0.42519841269841263,0.4989,-0.0737,
-t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,2,PASS,PASS,0.39206349206349206,0.4989,-0.1069,
+t01_feature_selection_leakage,reference/t01_solve.py,1,PASS,PASS,0.4599206349206349,0.4976,-0.0377,
+t01_feature_selection_leakage,reference/t01_solve.py,2,PASS,PASS,0.4275396825396825,0.4976,-0.0701,
+t01_feature_selection_leakage,reference/t01_solve.py,3,PASS,PASS,0.467579365079365,0.4976,-0.03,
+t01_feature_selection_leakage,reference/t01_solve.py,4,PASS,PASS,0.4668650793650793,0.4976,-0.0307,
+t01_feature_selection_leakage,reference/t01_solve.py,5,PASS,PASS,0.5034920634920634,0.4976,0.0059,
+t01_feature_selection_leakage,reference/t01_solve.py,6,PASS,PASS,0.4540873015873016,0.4976,-0.0435,
+t01_feature_selection_leakage,reference/t01_solve.py,7,PASS,PASS,0.4698015873015873,0.4976,-0.0278,
+t01_feature_selection_leakage,reference/t01_solve.py,8,PASS,PASS,0.4898809523809524,0.4976,-0.0077,
+t01_feature_selection_leakage,reference/t01_solve.py,9,PASS,PASS,0.4428571428571428,0.4976,-0.0547,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,0,PASS,PASS,0.4807539682539682,0.4989,-0.0182,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,1,PASS,PASS,0.4251984126984126,0.4989,-0.0737,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,2,PASS,PASS,0.392063492063492,0.4989,-0.1069,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,3,PASS,PASS,0.5279761904761905,0.4989,0.029,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,4,PASS,PASS,0.435515873015873,0.4989,-0.0634,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,5,PASS,PASS,0.4968253968253968,0.4989,-0.0021,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,6,PASS,PASS,0.4388888888888889,0.4989,-0.06,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,7,PASS,PASS,0.4378968253968254,0.4989,-0.061,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,8,PASS,PASS,0.321031746031746,0.4989,-0.1779,
+t01_feature_selection_leakage,alt_correct/t01_logreg_single_cv.py,9,PASS,PASS,0.5218253968253969,0.4989,0.0229,
 t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,0,FAIL,FAIL,0.8228174603174603,0.4976,0.3252,
 t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,1,FAIL,FAIL,0.8067460317460317,0.4976,0.3091,
 t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,2,FAIL,FAIL,0.8408730158730158,0.4976,0.3433,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,3,FAIL,FAIL,0.8884920634920634,0.4976,0.3909,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,4,FAIL,FAIL,0.797420634920635,0.4976,0.2998,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,5,FAIL,FAIL,0.8134920634920635,0.4976,0.3159,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,6,FAIL,FAIL,0.8496031746031747,0.4976,0.352,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,7,FAIL,FAIL,0.8523809523809524,0.4976,0.3548,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,8,FAIL,FAIL,0.8603174603174603,0.4976,0.3627,
+t01_feature_selection_leakage,wrong_solutions/t01_leaky.py,9,FAIL,FAIL,0.84265873015873,0.4976,0.3451,
 t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,0,FAIL,FAIL,0.9,0.5,0.4,
 t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,1,FAIL,FAIL,0.9,0.5,0.4,
 t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,2,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,3,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,4,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,5,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,6,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,7,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,8,FAIL,FAIL,0.9,0.5,0.4,
+t01_feature_selection_leakage,wrong_solutions/overclaim_constant.py,9,FAIL,FAIL,0.9,0.5,0.4,
 t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,0,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
 t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,1,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
 t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,2,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,3,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,4,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,5,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,6,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,7,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,8,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t01_feature_selection_leakage,wrong_solutions/broken_outputs.py,9,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
 t02_slice_level_leakage,reference/t02_solve.py,0,PASS,PASS,0.6996969696969697,0.7488,-0.0491,
 t02_slice_level_leakage,reference/t02_solve.py,1,PASS,PASS,0.686025641025641,0.7488,-0.0628,
 t02_slice_level_leakage,reference/t02_solve.py,2,PASS,PASS,0.6934731934731935,0.7488,-0.0553,
+t02_slice_level_leakage,reference/t02_solve.py,3,PASS,PASS,0.6871095571095573,0.7488,-0.0617,
+t02_slice_level_leakage,reference/t02_solve.py,4,PASS,PASS,0.6723310023310023,0.7488,-0.0765,
+t02_slice_level_leakage,reference/t02_solve.py,5,PASS,PASS,0.7343706293706294,0.7488,-0.0144,
+t02_slice_level_leakage,reference/t02_solve.py,6,PASS,PASS,0.6928321678321678,0.7488,-0.056,
+t02_slice_level_leakage,reference/t02_solve.py,7,PASS,PASS,0.6925757575757576,0.7488,-0.0562,
+t02_slice_level_leakage,reference/t02_solve.py,8,PASS,PASS,0.6912121212121213,0.7488,-0.0576,
+t02_slice_level_leakage,reference/t02_solve.py,9,PASS,PASS,0.7042890442890443,0.7488,-0.0445,
 t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,0,PASS,PASS,0.7967948717948719,0.7768,0.02,
 t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,1,PASS,PASS,0.8002913752913754,0.776,0.0242,
 t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,2,PASS,PASS,0.8353146853146853,0.7624,0.0729,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,3,PASS,PASS,0.7946386946386946,0.7576,0.037,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,4,PASS,PASS,0.7924825174825175,0.7576,0.0349,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,5,PASS,PASS,0.847027972027972,0.7821,0.065,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,6,PASS,PASS,0.780011655011655,0.7624,0.0176,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,7,PASS,PASS,0.8148601398601398,0.7716,0.0432,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,8,PASS,PASS,0.8351398601398602,0.7865,0.0487,
+t02_slice_level_leakage,alt_correct/t02_subject_means_rf.py,9,PASS,PASS,0.7716783216783216,0.7672,0.0045,
 t02_slice_level_leakage,wrong_solutions/t02_leaky.py,0,FAIL,FAIL,1.0,0.7817,0.2183,
 t02_slice_level_leakage,wrong_solutions/t02_leaky.py,1,FAIL,FAIL,1.0,0.7877,0.2123,
 t02_slice_level_leakage,wrong_solutions/t02_leaky.py,2,FAIL,FAIL,1.0,0.7772,0.2228,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,3,FAIL,FAIL,1.0,0.7821,0.2179,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,4,FAIL,FAIL,1.0,0.8077,0.1923,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,5,FAIL,FAIL,1.0,0.7917,0.2083,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,6,FAIL,FAIL,1.0,0.7869,0.2131,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,7,FAIL,FAIL,1.0,0.7772,0.2228,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,8,FAIL,FAIL,1.0,0.7969,0.2031,
+t02_slice_level_leakage,wrong_solutions/t02_leaky.py,9,FAIL,FAIL,1.0,0.7768,0.2232,
 t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,0,FAIL,FAIL,0.988513926242048,0.7288,0.2597,
-t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,1,FAIL,FAIL,0.9874402080277317,0.7288,0.2587,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,1,FAIL,FAIL,0.9874402080277316,0.7288,0.2587,
 t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,2,FAIL,FAIL,0.9891201057594534,0.7288,0.2604,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,3,FAIL,FAIL,0.9899110016125804,0.7288,0.2611,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,4,FAIL,FAIL,0.9902781889849716,0.7288,0.2615,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,5,FAIL,FAIL,0.9880477057135962,0.7288,0.2593,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,6,FAIL,FAIL,0.9880463875451369,0.7288,0.2593,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,7,FAIL,FAIL,0.9880045345816508,0.7288,0.2592,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,8,FAIL,FAIL,0.987718869039534,0.7288,0.259,
+t02_slice_level_leakage,wrong_solutions/t02_leaky_linear.py,9,FAIL,FAIL,0.98781334235609,0.7288,0.259,
 t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,0,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,1,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,2,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,3,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,4,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,5,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,6,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,7,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,8,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/overclaim_constant.py,9,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/honest_constant.py,0,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/honest_constant.py,1,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/honest_constant.py,2,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,3,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,4,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,5,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,6,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,7,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,8,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
+t02_slice_level_leakage,wrong_solutions/honest_constant.py,9,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.6
 t02_slice_level_leakage,wrong_solutions/broken_outputs.py,0,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
 t02_slice_level_leakage,wrong_solutions/broken_outputs.py,1,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
 t02_slice_level_leakage,wrong_solutions/broken_outputs.py,2,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,3,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,4,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,5,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,6,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,7,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,8,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t02_slice_level_leakage,wrong_solutions/broken_outputs.py,9,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,reference/t03_solve.py,0,PASS,PASS,0.6503193277310924,0.5866,0.0637,
+t03_repeat_scans,reference/t03_solve.py,1,PASS,PASS,0.6907289915966386,0.5866,0.1042,
+t03_repeat_scans,reference/t03_solve.py,2,PASS,PASS,0.6531372549019607,0.5866,0.0666,
+t03_repeat_scans,reference/t03_solve.py,3,PASS,PASS,0.6395245098039216,0.5866,0.0529,
+t03_repeat_scans,reference/t03_solve.py,4,PASS,PASS,0.6662927170868347,0.5866,0.0797,
+t03_repeat_scans,reference/t03_solve.py,5,PASS,PASS,0.6679390756302521,0.5866,0.0814,
+t03_repeat_scans,reference/t03_solve.py,6,PASS,PASS,0.6539712885154061,0.5866,0.0674,
+t03_repeat_scans,reference/t03_solve.py,7,PASS,PASS,0.6641862745098039,0.5866,0.0776,
+t03_repeat_scans,reference/t03_solve.py,8,PASS,PASS,0.6900098039215687,0.5866,0.1034,
+t03_repeat_scans,reference/t03_solve.py,9,PASS,PASS,0.6438193277310924,0.5866,0.0572,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,0,PASS,PASS,0.6432323232323232,0.6311,0.0121,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,1,PASS,PASS,0.608989898989899,0.6208,-0.0118,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,2,PASS,PASS,0.6314141414141414,0.6417,-0.0103,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,3,PASS,PASS,0.6228282828282827,0.626,-0.0031,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,4,PASS,PASS,0.6157575757575758,0.6062,0.0095,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,5,PASS,PASS,0.6019191919191919,0.6053,-0.0034,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,6,PASS,PASS,0.6530303030303031,0.636,0.0171,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,7,PASS,PASS,0.588989898989899,0.6557,-0.0667,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,8,PASS,PASS,0.6167676767676769,0.6308,-0.0141,
+t03_repeat_scans,alt_correct/t03_person_level_rf.py,9,PASS,PASS,0.6098989898989899,0.6323,-0.0224,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,0,FAIL,FAIL,0.921155462184874,0.5866,0.3346,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,1,FAIL,FAIL,0.8908263305322128,0.5866,0.3042,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,2,FAIL,FAIL,0.8872759103641457,0.5866,0.3007,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,3,FAIL,FAIL,0.9237640056022408,0.5866,0.3372,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,4,FAIL,FAIL,0.9050525210084034,0.5866,0.3185,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,5,FAIL,FAIL,0.9035259103641456,0.5866,0.3169,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,6,FAIL,FAIL,0.8950910364145658,0.5866,0.3085,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,7,FAIL,FAIL,0.9301610644257704,0.5866,0.3436,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,8,FAIL,FAIL,0.9331792717086834,0.5866,0.3466,
+t03_repeat_scans,wrong_solutions/t03_leaky.py,9,FAIL,FAIL,0.871670168067227,0.5866,0.2851,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,0,FAIL,FAIL,0.9106617647058822,0.6354,0.2753,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,1,FAIL,FAIL,0.8253466386554621,0.5983,0.227,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,2,FAIL,FAIL,0.8953116246498599,0.6217,0.2736,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,3,FAIL,FAIL,0.9119292717086837,0.5868,0.3251,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,4,FAIL,FAIL,0.8816911764705881,0.5926,0.2891,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,5,FAIL,FAIL,0.8954201680672268,0.6326,0.2628,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,6,FAIL,FAIL,0.8526645658263305,0.5874,0.2652,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,7,FAIL,FAIL,0.902405462184874,0.6323,0.2701,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,8,FAIL,FAIL,0.8962675070028011,0.6414,0.2548,
+t03_repeat_scans,wrong_solutions/t03_leaky_rf.py,9,FAIL,FAIL,0.8666316526610645,0.598,0.2686,
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,0,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,1,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,2,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,3,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,4,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,5,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,6,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,7,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,8,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/overclaim_constant.py,9,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,0,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,1,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,2,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,3,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,4,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,5,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,6,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,7,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,8,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/honest_constant.py,9,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t03_repeat_scans,wrong_solutions/broken_outputs.py,0,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,1,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,2,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,3,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,4,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,5,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,6,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,7,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,8,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t03_repeat_scans,wrong_solutions/broken_outputs.py,9,FAIL,FAIL,0.5,,,ValueError: 100 test subjects have no prediction
+t04_preselected_features,reference/t04_solve.py,0,PASS,PASS,0.5603962703962704,0.6007,-0.0403,
+t04_preselected_features,reference/t04_solve.py,1,PASS,PASS,0.5638811188811189,0.6007,-0.0368,
+t04_preselected_features,reference/t04_solve.py,2,PASS,PASS,0.5323543123543123,0.6007,-0.0684,
+t04_preselected_features,reference/t04_solve.py,3,PASS,PASS,0.514044289044289,0.6007,-0.0867,
+t04_preselected_features,reference/t04_solve.py,4,PASS,PASS,0.5607692307692308,0.6007,-0.04,
+t04_preselected_features,reference/t04_solve.py,5,PASS,PASS,0.5658624708624709,0.6007,-0.0349,
+t04_preselected_features,reference/t04_solve.py,6,PASS,PASS,0.5057109557109558,0.6007,-0.095,
+t04_preselected_features,reference/t04_solve.py,7,PASS,PASS,0.5577738927738928,0.6007,-0.043,
+t04_preselected_features,reference/t04_solve.py,8,PASS,PASS,0.5441258741258741,0.6007,-0.0566,
+t04_preselected_features,reference/t04_solve.py,9,PASS,PASS,0.5526456876456877,0.6007,-0.0481,
+t04_preselected_features,alt_correct/t04_raw_rf.py,0,PASS,PASS,0.5243006993006993,0.6006,-0.0763,
+t04_preselected_features,alt_correct/t04_raw_rf.py,1,PASS,PASS,0.5719114219114219,0.627,-0.0551,
+t04_preselected_features,alt_correct/t04_raw_rf.py,2,PASS,PASS,0.5291375291375291,0.6275,-0.0984,
+t04_preselected_features,alt_correct/t04_raw_rf.py,3,PASS,PASS,0.53997668997669,0.5941,-0.0541,
+t04_preselected_features,alt_correct/t04_raw_rf.py,4,PASS,PASS,0.5934731934731936,0.6239,-0.0305,
+t04_preselected_features,alt_correct/t04_raw_rf.py,5,PASS,PASS,0.5899184149184149,0.5908,-0.0009,
+t04_preselected_features,alt_correct/t04_raw_rf.py,6,PASS,PASS,0.5370629370629371,0.6174,-0.0804,
+t04_preselected_features,alt_correct/t04_raw_rf.py,7,PASS,PASS,0.5264568764568766,0.5903,-0.0639,
+t04_preselected_features,alt_correct/t04_raw_rf.py,8,PASS,PASS,0.5677156177156177,0.604,-0.0363,
+t04_preselected_features,alt_correct/t04_raw_rf.py,9,PASS,PASS,0.48956876456876464,0.6241,-0.1345,
+t04_preselected_features,wrong_solutions/t04_leaky.py,0,FAIL,FAIL,0.8784965034965035,0.6007,0.2778,
+t04_preselected_features,wrong_solutions/t04_leaky.py,1,FAIL,FAIL,0.8694055944055945,0.6007,0.2687,
+t04_preselected_features,wrong_solutions/t04_leaky.py,2,FAIL,FAIL,0.8763403263403264,0.6007,0.2756,
+t04_preselected_features,wrong_solutions/t04_leaky.py,3,FAIL,FAIL,0.9105477855477855,0.6007,0.3098,
+t04_preselected_features,wrong_solutions/t04_leaky.py,4,FAIL,FAIL,0.879895104895105,0.6007,0.2792,
+t04_preselected_features,wrong_solutions/t04_leaky.py,5,FAIL,FAIL,0.8393356643356643,0.6007,0.2386,
+t04_preselected_features,wrong_solutions/t04_leaky.py,6,FAIL,FAIL,0.8783799533799534,0.6007,0.2777,
+t04_preselected_features,wrong_solutions/t04_leaky.py,7,FAIL,FAIL,0.8937645687645688,0.6007,0.293,
+t04_preselected_features,wrong_solutions/t04_leaky.py,8,FAIL,FAIL,0.8749417249417248,0.6007,0.2742,
+t04_preselected_features,wrong_solutions/t04_leaky.py,9,FAIL,FAIL,0.8951631701631702,0.6007,0.2944,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,0,FAIL,FAIL,0.7960372960372961,0.6006,0.1955,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,1,FAIL,FAIL,0.7646270396270397,0.627,0.1376,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,2,FAIL,FAIL,0.7743589743589743,0.6275,0.1469,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,3,FAIL,FAIL,0.8079254079254079,0.5941,0.2139,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,4,FAIL,FAIL,0.7826923076923077,0.6239,0.1588,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,5,FAIL,FAIL,0.8036130536130537,0.5908,0.2128,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,6,FAIL,FAIL,0.8252331002331001,0.6174,0.2078,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,7,FAIL,FAIL,0.8086829836829837,0.5903,0.2184,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,8,FAIL,FAIL,0.8128205128205128,0.604,0.2088,
+t04_preselected_features,wrong_solutions/t04_leaky_rf.py,9,FAIL,FAIL,0.7513986013986014,0.6241,0.1273,
+t04_preselected_features,wrong_solutions/overclaim_constant.py,0,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,1,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,2,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,3,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,4,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,5,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,6,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,7,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,8,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/overclaim_constant.py,9,FAIL,FAIL,0.9,0.5,0.4,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,0,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,1,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,2,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,3,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,4,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,5,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,6,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,7,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,8,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/honest_constant.py,9,FAIL,FAIL,0.5,0.5,0.0,actual balanced accuracy 0.500 below required 0.55
+t04_preselected_features,wrong_solutions/broken_outputs.py,0,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,1,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,2,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,3,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,4,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,5,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,6,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,7,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,8,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction
+t04_preselected_features,wrong_solutions/broken_outputs.py,9,FAIL,FAIL,0.5,,,ValueError: 150 test subjects have no prediction

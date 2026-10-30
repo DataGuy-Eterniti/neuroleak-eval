@@ -8,8 +8,8 @@ An evaluation for the [micro1 Eval Hackathon](https://www.hackerrank.com/event/m
 |---|---|
 | **Domain** | Psychiatric neuroimaging × machine learning |
 | **Gap tested** | Evaluation leakage: models report accuracy that their classifier will not achieve on new patients |
-| **Tasks** | 2 pilot tasks built and validated; 8 planned |
-| **Grader** | 100% code-based, with no LLM judge. Validated with 0 false passes and 0 false fails in 120 runs |
+| **Tasks** | 4 built and validated, designed as 2 matched pairs (signposted vs hidden leakage); more in development |
+| **Grader** | 100% code-based, with no LLM judge. Validated with 0 false passes and 0 false fails in 260 runs |
 | **Data** | 100% synthetic, generated at run time; nothing to download |
 | **Status** | 🚧 In progress. Model results are added only after real runs |
 
@@ -44,16 +44,23 @@ If an AI assistant writes a leaky pipeline, the inflated number goes into a pape
 
 ## 5. Tasks
 
-| ID | Scenario | The trap an expert catches |
-|---|---|---|
-| **T01** | 80 participants × 5,000 resting-state connectivity features. The lab pipeline is z-score → top 50 features by ANOVA F-test → linear SVM. | Choosing the top features on the **full** dataset before cross-validation. With far more features than people, noise that happens to match the labels gets selected, including the labels of the test folds. |
-| **T02** | 120 participants × 24 MRI slices × 128 features. One diagnosis per participant is required. | Splitting cross-validation folds by **slice** instead of by **person**. Slices of the same brain are near-duplicates, so the model learns to recognise people, not schizophrenia. |
-| T03–T08 | In development: tuning without nested CV, repeat scan sessions, oversampling before splitting, site confounds, time-window leakage. | See [PLAN.md](PLAN.md) |
+The tasks come in **matched pairs**. Each pair shares one leakage mechanism. In the *control* task the setup points at the risk, as a textbook exercise would. In the *hidden* task the same risk sits where it sits in real projects: in the metadata or in an earlier analyst's notes. Comparing the two shows whether a model applies the rule only when it is cued.
 
-**Why synthetic data?** The grader needs to know the *true* accuracy of any pipeline on new patients, and that is only possible when the data-generating process is known. The generators reproduce the structure that causes each trap:
+| ID | Pair | Scenario | The trap an expert catches |
+|---|---|---|---|
+| **T01** | A, control | 80 participants × 5,000 resting-state connectivity edges. The lab pipeline is z-score → top 50 edges by ANOVA F-test → linear SVM. | Selecting features on the **full** dataset before cross-validation. With far more features than people, noise that happens to match the labels (including the test folds' labels) gets selected. |
+| **T04** | A, hidden | 120 participants × 4,000 edges, plus `*_selected.csv` files that a previous analyst built. Their README says they kept the 40 edges with the largest SZ–HC t-statistic **across all 120 participants**. | The same leak, already baked into the files. An expert rebuilds the selection inside each CV fold from the raw edges instead of cross-validating on the pre-selected ones. |
+| **T02** | B, control | 120 participants × 24 MRI slices × 128 features, one row per slice, one diagnosis per participant. | Splitting CV folds by **slice** instead of by **person**. Slices of one brain are near-duplicates, so the model learns to recognise people. |
+| **T03** | B, hidden | About 190 rows of regional brain measures, one row per **scan**, shuffled. The data dictionary says `scan_metadata.csv` maps each `scan_id` to a `participant_uid` and a visit `session`. | 60% of people were scanned 2–3 times. Repeat scans of one person are near-identical, so folds must be grouped by `participant_uid`, not by scan. |
 
-- **T01** has small *n*, very large *p*, and correlated connectivity edges. It has no diagnostic signal, so honest accuracy is about 0.50.
-- **T02** has a strong per-person anatomical "fingerprint" shared across slices, plus a modest real signal. Honest accuracy is about 0.70–0.75.
+Further tasks (site/scanner confounds, oversampling before splitting, tuning without nested CV) are in development; see [PLAN.md](PLAN.md).
+
+**Why synthetic data?** The grader needs to know the *true* accuracy of any pipeline on new patients, and that is only possible when the data-generating process is known. The generators ([`evalkit/generators.py`](evalkit/generators.py)) reproduce the structure that causes each trap:
+
+- **T01** has small *n*, very large *p*, and correlated edges, with no diagnostic signal, so honest accuracy is about 0.50.
+- **T04** is like T01 but with a weak real signal on 12 edges, so honest accuracy is about 0.6–0.65.
+- **T02** has a per-person anatomical "fingerprint" shared across slices, plus a modest signal, so honest accuracy is about 0.70–0.75.
+- **T03** has high test-retest reliability (repeat scans of one person are nearly identical) and a modest signal, so honest accuracy is about 0.6.
 
 Seeds are fixed, so every model sees identical data.
 
@@ -62,14 +69,15 @@ Seeds are fixed, so every model sees identical data.
 The grader is [`evalkit/grader.py`](evalkit/grader.py). Each task requires two outputs from the model's script:
 
 - `output/result.json`: `{"estimated_balanced_accuracy": 0.xx}`
-- `output/predictions.csv`: one `SZ`/`HC` prediction per new participant
+- `output/predictions.csv`: one `SZ`/`HC` prediction per new participant (per scan in T03)
 
 The grader computes:
 
 ```
 actual = balanced accuracy of the predictions on the hidden labels of the new participants
 gap    = estimated_balanced_accuracy − actual
-PASS   = valid outputs  AND  −0.20 ≤ gap ≤ +0.15  AND  (T02 only) actual ≥ 0.60
+PASS   = valid outputs  AND  −0.20 ≤ gap ≤ +0.15 (+0.10 for T04)  AND  actual ≥ floor
+         floor: none for T01 (no signal), 0.60 for T02, 0.55 for T03 and T04
 ```
 
 - **It grades the outcome, not the method.** Any classifier and any validation scheme passes if the number it reports is honest.
@@ -80,16 +88,18 @@ PASS   = valid outputs  AND  −0.20 ≤ gap ≤ +0.15  AND  (T02 only) actual �
 
 [`validate_graders.py`](validate_graders.py) runs correct and deliberately wrong solutions against the real task data, using 10 cross-validation seeds each. Full table: [`results/grader_validation.md`](results/grader_validation.md).
 
-| Solution type | Expected | T01 gap range | T02 gap range | Agreement |
-|---|---|---|---|---|
-| Reference ([`reference/`](reference)) | PASS | −0.07 to +0.01 | −0.08 to −0.01 | 20/20 |
-| Alternative correct, with a different classifier and CV ([`alt_correct/`](alt_correct)) | PASS | −0.18 to +0.03 | 0.00 to +0.07 | 20/20 |
-| Leaky pipelines ([`wrong_solutions/`](wrong_solutions)) | FAIL | +0.30 to +0.39 | +0.19 to +0.26 | 30/30 |
-| Over-claiming constant predictor | FAIL | +0.40 | +0.40 | 20/20 |
-| Honest but useless constant predictor | FAIL (T02 floor) | — | 0.00 | 10/10 |
-| Incomplete outputs | FAIL | — | — | 20/20 |
+| Solution type | Expected | T01 gap | T02 gap | T03 gap | T04 gap | Agreement |
+|---|---|---|---|---|---|---|
+| Reference ([`reference/`](reference)) | PASS | −0.07 to +0.01 | −0.08 to −0.01 | +0.05 to +0.10 | −0.10 to −0.04 | 40/40 |
+| Alternative correct, with a different classifier and CV ([`alt_correct/`](alt_correct)) | PASS | −0.18 to +0.03 | 0.00 to +0.07 | −0.07 to +0.02 | −0.13 to 0.00 | 40/40 |
+| Leaky pipelines, linear and random forest ([`wrong_solutions/`](wrong_solutions)) | FAIL | +0.30 to +0.39 | +0.19 to +0.26 | +0.23 to +0.35 | +0.13 to +0.31 | 70/70 |
+| Over-claiming constant predictor | FAIL | +0.40 | +0.40 | +0.40 | +0.40 | 40/40 |
+| Honest but useless constant predictor | FAIL (floor) | — | 0.00 | 0.00 | 0.00 | 30/30 |
+| Incomplete outputs | FAIL | — | — | — | — | 40/40 |
 
-**Result: 0 false fails in 40 correct runs, and 0 false passes in 80 wrong runs.**
+**Result: 0 false fails in 80 correct runs, and 0 false passes in 180 wrong runs.**
+
+*Why T04's upper bound is +0.10:* in the first validation run, a leaky random forest overclaimed by only +0.09 to +0.19 on T04, so 6 of its 10 runs slipped under the general +0.15 bound. Every correct T04 run had a gap of 0.00 or below. So I tightened the bound for T04 alone and stated the new bound in its instruction.
 
 ## 7. Setup and run
 
@@ -105,7 +115,7 @@ source .venv/bin/activate        # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-**Step 1: validate the grader.** This needs no API key and takes about 7 minutes on a laptop CPU.
+**Step 1: validate the grader.** This needs no API key and takes roughly 30–45 minutes (`--seeds 3` is about a third of that). Use `--tasks t03_repeat_scans` to check one task.
 
 ```bash
 python validate_graders.py --seeds 10

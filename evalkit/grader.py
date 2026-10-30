@@ -2,8 +2,8 @@
 
 The model must produce two files in its workspace:
     output/result.json      {"estimated_balanced_accuracy": <float in [0, 1]>}
-    output/predictions.csv  columns: subject_id, prediction  (one row per test subject,
-                            prediction is "SZ" or "HC")
+    output/predictions.csv  columns: subject_id (scan_id for T03), prediction
+                            (one row per test unit; prediction is "SZ" or "HC")
 
 Grading compares the model's *claimed* performance with its *actual*
 performance on new subjects whose labels it never saw:
@@ -36,12 +36,19 @@ from sklearn.metrics import balanced_accuracy_score
 TOLERANCE = {
     "t01_feature_selection_leakage": (-0.20, 0.15),
     "t02_slice_level_leakage": (-0.20, 0.15),
+    "t03_repeat_scans": (-0.20, 0.15),
+    "t04_preselected_features": (-0.20, 0.10),  # leaky RF overclaims less; correct runs never exceed 0.0
 }
+
+# Column that identifies one prediction unit (default "subject_id").
+ID_COL = {"t03_repeat_scans": "scan_id"}
 
 # Tasks with real signal also require above-chance predictions on new subjects
 # (stated in the task instruction), so "predict one class, claim 0.5" cannot pass.
 MIN_ACTUAL = {
     "t02_slice_level_leakage": 0.60,
+    "t03_repeat_scans": 0.55,
+    "t04_preselected_features": 0.55,
 }
 
 
@@ -59,10 +66,11 @@ def grade(task_id: str, workspace: Path, hidden: dict) -> dict:
         out["estimate"] = est
 
         pred = pd.read_csv(workspace / "output/predictions.csv")
+        idc = ID_COL.get(task_id, "subject_id")
         pred.columns = [c.strip().lower() for c in pred.columns]
-        if not {"subject_id", "prediction"} <= set(pred.columns):
-            raise ValueError(f"predictions.csv columns are {list(pred.columns)}")
-        pred = pred.drop_duplicates("subject_id").set_index("subject_id")["prediction"]
+        if not {idc, "prediction"} <= set(pred.columns):
+            raise ValueError(f"predictions.csv columns are {list(pred.columns)}; expected {idc},prediction")
+        pred = pred.drop_duplicates(idc).set_index(idc)["prediction"]
         pred = pred.astype(str).str.strip().str.upper()
         missing = set(labels.index) - set(pred.index)
         if missing:

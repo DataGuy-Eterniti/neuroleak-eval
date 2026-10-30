@@ -33,15 +33,30 @@ CASES = {
                  "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
                  "wrong_solutions/broken_outputs.py"],
     },
+    "t03_repeat_scans": {
+        "PASS": ["reference/t03_solve.py", "alt_correct/t03_person_level_rf.py"],
+        "FAIL": ["wrong_solutions/t03_leaky.py", "wrong_solutions/t03_leaky_rf.py",
+                 "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
+                 "wrong_solutions/broken_outputs.py"],
+    },
+    "t04_preselected_features": {
+        "PASS": ["reference/t04_solve.py", "alt_correct/t04_raw_rf.py"],
+        "FAIL": ["wrong_solutions/t04_leaky.py", "wrong_solutions/t04_leaky_rf.py",
+                 "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
+                 "wrong_solutions/broken_outputs.py"],
+    },
 }
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, default=5)
+    ap.add_argument("--tasks", default=",".join(CASES), help="comma-separated task IDs")
     a = ap.parse_args()
+    tasks = [t.strip() for t in a.tasks.split(",") if t.strip()]
     rows = []
-    for task, groups in CASES.items():
+    for task in tasks:
+        groups = CASES[task]
         for expected, sols in groups.items():
             for sol in sols:
                 for seed in range(a.seeds):
@@ -56,6 +71,10 @@ def main():
                     print(f"{task[:3]} {sol:45s} seed={seed} expected={expected} got={got} gap={g['gap']}")
     df = pd.DataFrame(rows)
     Path(ROOT / "results").mkdir(exist_ok=True)
+    old = ROOT / "results/grader_validation.csv"
+    if old.exists() and set(tasks) != set(CASES):   # partial re-run: keep other tasks' rows
+        prev = pd.read_csv(old)
+        df = pd.concat([prev[~prev.task.isin(tasks)], df], ignore_index=True)
     df.to_csv(ROOT / "results/grader_validation.csv", index=False)
     summ = (df.assign(correct=df.expected == df.got)
               .groupby(["task", "solution", "expected"])

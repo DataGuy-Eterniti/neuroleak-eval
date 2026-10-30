@@ -15,7 +15,7 @@ Models are written as  provider:model-id  (no prefix = openrouter). Free tiers:
 
 Examples:
     python run_eval.py --models gemini:gemini-2.5-flash --trials 1 --sleep 10
-    python run_eval.py --models nvidia:moonshotai/kimi-k2.6,openrouter:nvidia/nemotron-3-ultra-550b-a55b:free --trials 3
+    python run_eval.py --models nvidia:mistralai/mistral-large-4-1t-a52b,openrouter:nvidia/nemotron-3-ultra-550b-a55b:free --trials 3
     python run_eval.py --summarize          # rebuild results/summary.md from runs.jsonl
 
 Copy model IDs exactly from each provider's model list.
@@ -90,11 +90,14 @@ def chat(client, model, messages, temperature, max_tokens, provider="openrouter"
             u = r.usage.model_dump() if r.usage else {}
             return {"text": r.choices[0].message.content or "", "served_model": r.model,
                     "usage": u, "cost_usd": u.get("cost"), "latency_s": round(time.time() - t0, 1)}
-        except Exception as e:  # noqa: BLE001  (free tiers often return 429: back off)
-            if attempt == 5:
-                raise
+        except Exception as e:  # noqa: BLE001
+            status = getattr(e, "status_code", None)
+            body = (getattr(getattr(e, "response", None), "text", "") or str(e))[:300]
+            # 4xx (except 429 rate limit) will not fix itself: fail fast with the reason.
+            if attempt == 5 or (status and 400 <= status < 500 and status != 429):
+                raise RuntimeError(f"API {status}: {body}") from e
             wait = 20 * (attempt + 1)
-            print(f"   API error ({str(e)[:160]}); retrying in {wait}s")
+            print(f"   API error ({status}: {body[:160]}); retrying in {wait}s")
             time.sleep(wait)
 
 
@@ -197,7 +200,15 @@ def main():
         for task in tasks:
             for trial in range(1, a.trials + 1):
                 print(f"{spec} | {task} | trial {trial}")
-                rec = run_trial(client, spec, task, trial, a)
+                try:
+                    rec = run_trial(client, spec, task, trial, a)
+                except RuntimeError as e:  # provider failure, not a model failure
+                    print(f"   SKIPPED (API failure, not scored): {e}")
+                    with open(RESULTS / "api_failures.jsonl", "a") as fh:
+                        fh.write(json.dumps({"model": spec, "task": task, "trial": trial,
+                                             "date_utc": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
+                                             "error": str(e)}) + "\n")
+                    continue
                 if a.sleep:
                     time.sleep(a.sleep)
                 print(f"   pass={rec['pass']} estimate={rec['estimate']} actual={rec['actual']} "

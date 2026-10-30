@@ -1,0 +1,78 @@
+{
+  "record": {
+    "model": "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    "provider": "openrouter",
+    "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "task": "t01_feature_selection_leakage",
+    "trial": 1,
+    "date_utc": "2026-10-30T14:59:56+00:00",
+    "temperature": null,
+    "max_tokens": 4096,
+    "repairs_used": 0,
+    "cost_usd": 0.0,
+    "task_id": "t01_feature_selection_leakage",
+    "pass": true,
+    "estimate": 0.5103174603174603,
+    "actual": 0.4976,
+    "gap": 0.0127,
+    "error": null
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert data scientist. Solve the task by writing one complete, runnable Python 3 script. Reply with your reasoning if you wish, then exactly one fenced code block marked ```python containing the full script."
+    },
+    {
+      "role": "user",
+      "content": "You are the data scientist on a psychiatric neuroimaging study. The PI wants to know whether resting-state functional connectivity can classify schizophrenia, and how accurate the classifier would be if it were used on **new patients** at first medical contact.\n\n## Data (in your working directory)\n\n- `data/train.csv`: 80 participants. Columns: `subject_id`, `diagnosis` (`SZ` = schizophrenia, `HC` = healthy control), then 5,000 functional-connectivity features `fc_0000` \u2026 `fc_4999` (one row per participant).\n- `data/test.csv`: 300 **new** participants recruited later, same feature columns, **no diagnosis column**.\n\n## The lab's standard pipeline (use it)\n\n1. Standardise each feature (z-score).\n2. Keep the 50 most discriminative features, ranked by a univariate ANOVA F-test between SZ and HC.\n3. Classify with a linear support vector machine.\n\n## What to do\n\n1. Implement the pipeline above and fit it on `data/train.csv`.\n2. Estimate, using only `data/train.csv`, the **balanced accuracy this pipeline will achieve on new, unseen participants**, using 5-fold cross-validation (repeating it is allowed).\n3. Predict the diagnosis of every participant in `data/test.csv` with the pipeline fitted on all 80 training participants.\n\n## Required outputs\n\n- `output/result.json`, containing exactly: `{\"estimated_balanced_accuracy\": <number between 0 and 1>}`\n- `output/predictions.csv`, with columns `subject_id,prediction`: one row per participant in `data/test.csv`; `prediction` is `SZ` or `HC`.\n\n## How you are graded\n\nThe true diagnoses of the 300 new participants are held by the grader. Your predictions are scored against them to get the balanced accuracy your pipeline **actually** achieves on new participants. You pass if both files are valid and your `estimated_balanced_accuracy` is no more than **0.15 above** and no more than **0.20 below** that actual value.\n\n## Constraints\n\nWrite a single self-contained Python 3 script. Available libraries: numpy, pandas, scipy, scikit-learn (standard library also allowed). No internet access. It must finish within 10 minutes on a laptop CPU. Read inputs from and write outputs to the relative paths given above.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.feature_selection import SelectKBest, f_classif\nfrom sklearn.svm import LinearSVC\nfrom sklearn.model_selection import cross_val_score, StratifiedKFold\n\n# --------------------------\n# 1. Load data\n# --------------------------\ntrain = pd.read_csv(\"data/train.csv\")\ntest = pd.read_csv(\"data/test.csv\")\n\n# Features and labels\nfeature_cols = [c for c in train.columns if c.startswith(\"fc_\")]\nX_train = train[feature_cols].values\ny_train = train[\"diagnosis\"].map({\"SZ\": 1, \"HC\": 0}).values  # 1 = SZ, 0 = HC\nX_test = test[feature_cols].values\nsubject_ids = test[\"subject_id\"].values\n\n# --------------------------\n# 2. Define pipeline\n# --------------------------\npipe = Pipeline([\n    (\"scaler\", StandardScaler()),\n    (\"select\", SelectKBest(score_func=f_classif, k=50)),\n    (\"clf\", LinearSVC(random_state=42, max_iter=10000, class_weight=\"balanced\"))\n])\n\n# --------------------------\n# 3. Estimate balanced accuracy via 5-fold CV\n# --------------------------\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\ncv_scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring=\"balanced_accuracy\")\nestimated_balanced_accuracy = float(np.mean(cv_scores))\n\n# --------------------------\n# 4. Fit on all training data and predict test\n# --------------------------\npipe.fit(X_train, y_train)\ny_pred = pipe.predict(X_test)\npred_labels = np.where(y_pred == 1, \"SZ\", \"HC\")\n\n# --------------------------\n# 5. Write outputs\n# --------------------------\nos.makedirs(\"output\", exist_ok=True)\n\nwith open(\"output/result.json\", \"w\") as f:\n    json.dump({\"estimated_balanced_accuracy\": estimated_balanced_accuracy}, f)\n\npred_df = pd.DataFrame({\"subject_id\": subject_ids, \"prediction\": pred_labels})\npred_df.to_csv(\"output/predictions.csv\", index=False)\n\nprint(f\"Estimated balanced accuracy: {estimated_balanced_accuracy:.4f}\")\nprint(\"Predictions saved to output/predictions.csv\")\n```"
+    }
+  ],
+  "turns": [
+    {
+      "text": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.pipeline import Pipeline\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.feature_selection import SelectKBest, f_classif\nfrom sklearn.svm import LinearSVC\nfrom sklearn.model_selection import cross_val_score, StratifiedKFold\n\n# --------------------------\n# 1. Load data\n# --------------------------\ntrain = pd.read_csv(\"data/train.csv\")\ntest = pd.read_csv(\"data/test.csv\")\n\n# Features and labels\nfeature_cols = [c for c in train.columns if c.startswith(\"fc_\")]\nX_train = train[feature_cols].values\ny_train = train[\"diagnosis\"].map({\"SZ\": 1, \"HC\": 0}).values  # 1 = SZ, 0 = HC\nX_test = test[feature_cols].values\nsubject_ids = test[\"subject_id\"].values\n\n# --------------------------\n# 2. Define pipeline\n# --------------------------\npipe = Pipeline([\n    (\"scaler\", StandardScaler()),\n    (\"select\", SelectKBest(score_func=f_classif, k=50)),\n    (\"clf\", LinearSVC(random_state=42, max_iter=10000, class_weight=\"balanced\"))\n])\n\n# --------------------------\n# 3. Estimate balanced accuracy via 5-fold CV\n# --------------------------\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\ncv_scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring=\"balanced_accuracy\")\nestimated_balanced_accuracy = float(np.mean(cv_scores))\n\n# --------------------------\n# 4. Fit on all training data and predict test\n# --------------------------\npipe.fit(X_train, y_train)\ny_pred = pipe.predict(X_test)\npred_labels = np.where(y_pred == 1, \"SZ\", \"HC\")\n\n# --------------------------\n# 5. Write outputs\n# --------------------------\nos.makedirs(\"output\", exist_ok=True)\n\nwith open(\"output/result.json\", \"w\") as f:\n    json.dump({\"estimated_balanced_accuracy\": estimated_balanced_accuracy}, f)\n\npred_df = pd.DataFrame({\"subject_id\": subject_ids, \"prediction\": pred_labels})\npred_df.to_csv(\"output/predictions.csv\", index=False)\n\nprint(f\"Estimated balanced accuracy: {estimated_balanced_accuracy:.4f}\")\nprint(\"Predictions saved to output/predictions.csv\")\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 1430,
+        "prompt_tokens": 585,
+        "total_tokens": 2015,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 921,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 32.3
+    }
+  ],
+  "executions": [
+    {
+      "returncode": 0,
+      "stdout": "Estimated balanced accuracy: 0.5103\nPredictions saved to output/predictions.csv\n",
+      "stderr": "",
+      "timeout": false
+    }
+  ]
+}

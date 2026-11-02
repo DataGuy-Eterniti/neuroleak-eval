@@ -38,6 +38,8 @@ TOLERANCE = {
     "t02_slice_level_leakage": (-0.20, 0.15),
     "t03_repeat_scans": (-0.20, 0.15),
     "t04_preselected_features": (-0.20, 0.10),  # leaky RF overclaims less; correct runs never exceed 0.0
+    "t05_treatment_leakage": (-0.20, 0.15),
+    "t06_oversampling_before_cv": (-0.20, 0.15),
 }
 
 # Column that identifies one prediction unit (default "subject_id").
@@ -49,6 +51,8 @@ MIN_ACTUAL = {
     "t02_slice_level_leakage": 0.60,
     "t03_repeat_scans": 0.55,
     "t04_preselected_features": 0.55,
+    "t05_treatment_leakage": 0.60,
+    "t06_oversampling_before_cv": 0.55,
 }
 
 

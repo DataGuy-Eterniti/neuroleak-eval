@@ -45,6 +45,18 @@ CASES = {
                  "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
                  "wrong_solutions/broken_outputs.py"],
     },
+    "t05_treatment_leakage": {
+        "PASS": ["reference/t05_solve.py", "alt_correct/t05_mri_only_rf.py"],
+        "FAIL": ["wrong_solutions/t05_leaky.py", "wrong_solutions/t05_leaky_rf.py",
+                 "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
+                 "wrong_solutions/broken_outputs.py"],
+    },
+    "t06_oversampling_before_cv": {
+        "PASS": ["reference/t06_solve.py", "alt_correct/t06_noisy_oversample_in_fold.py"],
+        "FAIL": ["wrong_solutions/t06_leaky.py", "wrong_solutions/t06_leaky_noisy.py",
+                 "wrong_solutions/overclaim_constant.py", "wrong_solutions/honest_constant.py",
+                 "wrong_solutions/broken_outputs.py"],
+    },
 }
 
 

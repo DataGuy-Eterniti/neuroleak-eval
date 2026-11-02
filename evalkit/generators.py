@@ -202,9 +202,80 @@ def gen_t04(seed: int = 404):
     return files, hidden
 
 
+# ---------------------------------------------------------------------------
+# T05 - treatment variables that only exist after diagnosis (target leakage)
+# ---------------------------------------------------------------------------
+def gen_t05(seed: int = 505):
+    """Clinical + MRI table for a first-contact screening tool.
+
+    Training cohort (160): patients are mostly already treated, so the
+    antipsychotic dose (chlorpromazine equivalents) and months on medication
+    are > 0 for almost every SZ and 0 for every HC. Test cohort (200): people
+    at FIRST medical contact, before any treatment, so those columns are 0
+    for everyone. 60 regional MRI measures carry a modest real signal.
+    """
+    rng = np.random.default_rng(seed)
+    p = 60
+    cols = [f"roi_{i:02d}" for i in range(p)]
+    signal = np.zeros(p)
+    signal[:8] = 0.55
+
+    def cohort(y, treated):
+        n = len(y)
+        X = np.round(rng.normal(size=(n, p)) + np.outer(y, signal), 4)
+        df = pd.DataFrame(X, columns=cols)
+        df.insert(0, "age", np.round(rng.normal(27, 6, n)).clip(18, 50).astype(int))
+        df.insert(1, "sex", rng.choice(["F", "M"], n))
+        df.insert(2, "years_education", np.round(rng.normal(13, 2.5, n) - 0.8 * y).clip(6, 20).astype(int))
+        on_med = (y == 1) & treated & (rng.random(n) < 0.9)
+        df.insert(3, "cpz_equivalent_mg", np.where(on_med, np.round(rng.lognormal(5.6, 0.45, n)), 0).astype(int))
+        df.insert(4, "months_on_antipsychotics", np.where(on_med, np.round(rng.gamma(2.0, 14.0, n)) + 1, 0).astype(int))
+        return df
+
+    y_train = np.array([1] * 72 + [0] * 88); rng.shuffle(y_train)
+    y_test = rng.integers(0, 2, size=200)
+    train = cohort(y_train, treated=True)
+    train.insert(0, "diagnosis", LABELS[y_train])
+    train.insert(0, "subject_id", _ids("sub-", 160))
+    test_ids = _ids("new-", 200)
+    test = cohort(y_test, treated=False)
+    test.insert(0, "subject_id", test_ids)
+    hidden = {"test_labels": pd.Series(LABELS[y_test], index=test_ids)}
+    return {"data/train.csv": train, "data/test.csv": test}, hidden
+
+
+# ---------------------------------------------------------------------------
+# T06 - oversampling the minority class before cross-validation
+# ---------------------------------------------------------------------------
+def gen_t06(seed: int = 606):
+    """Imbalanced cohort: 32 SZ vs 128 HC, 150 structural measures with a
+    modest real signal. The PI asks for the classes to be balanced. Balancing
+    by duplicating or interpolating SZ rows BEFORE splitting puts copies of
+    the same patient in training and validation folds.
+    """
+    rng = np.random.default_rng(seed)
+    p = 150
+    cols = [f"roi_{i:03d}" for i in range(p)]
+    signal = np.zeros(p)
+    signal[:10] = 0.65
+    y_train = np.array([1] * 32 + [0] * 128); rng.shuffle(y_train)
+    y_test = np.array([1] * 100 + [0] * 100); rng.shuffle(y_test)
+    mk = lambda y: np.round(rng.normal(size=(len(y), p)) + np.outer(y, signal), 4)
+    train = pd.DataFrame(mk(y_train), columns=cols)
+    train.insert(0, "diagnosis", LABELS[y_train])
+    train.insert(0, "subject_id", _ids("sub-", len(y_train)))
+    test_ids = _ids("new-", len(y_test))
+    test = pd.DataFrame(mk(y_test), columns=cols)
+    test.insert(0, "subject_id", test_ids)
+    hidden = {"test_labels": pd.Series(LABELS[y_test], index=test_ids)}
+    return {"data/train.csv": train, "data/test.csv": test}, hidden
+
+
 GENERATORS = {
     "t01_feature_selection_leakage": gen_t01,
     "t02_slice_level_leakage": gen_t02,
     "t03_repeat_scans": gen_t03,
     "t04_preselected_features": gen_t04,
+    "t05_treatment_leakage": gen_t05,
+    "t06_oversampling_before_cv": gen_t06,
 }

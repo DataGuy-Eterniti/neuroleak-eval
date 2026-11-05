@@ -1,0 +1,78 @@
+{
+  "record": {
+    "model": "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    "provider": "openrouter",
+    "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "task": "t04_preselected_features",
+    "trial": 3,
+    "date_utc": "2026-11-05T10:16:20+00:00",
+    "temperature": null,
+    "max_tokens": 4096,
+    "repairs_used": 0,
+    "cost_usd": 0.0,
+    "task_id": "t04_preselected_features",
+    "pass": false,
+    "estimate": 0.8609557109557109,
+    "actual": 0.5973,
+    "gap": 0.2637,
+    "error": null
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert data scientist. Solve the task by writing one complete, runnable Python 3 script. Reply with your reasoning if you wish, then exactly one fenced code block marked ```python containing the full script."
+    },
+    {
+      "role": "user",
+      "content": "You are joining a schizophrenia resting-state fMRI project half-way through. The previous analyst left the project; the PI now needs a classifier separating schizophrenia from healthy controls and an estimate of how accurate it will be on **new participants**, for a grant report.\n\n## Data (in your working directory)\n\n- `data/train_raw.csv`: 120 participants. Columns: `subject_id`, `diagnosis` (`SZ` = schizophrenia, `HC` = healthy control), then 4,000 functional-connectivity edges `edge_0000` \u2026 `edge_3999`.\n- `data/train_selected.csv`: the same 120 participants, `subject_id`, `diagnosis`, and a subset of 40 edges.\n- `data/test_raw.csv` and `data/test_selected.csv`: 300 **new** participants recruited later, the same columns, **no diagnosis column**.\n\n### Notes left by the previous analyst (data README)\n\n> Connectivity edges are Fisher-z transformed correlations between atlas regions after standard preprocessing.\n> To make modelling tractable I reduced the 4,000 edges to the 40 most informative ones: for each edge I ran a two-sample t-test between SZ and HC across all 120 participants and kept the 40 edges with the largest absolute t-statistic. Those are the `*_selected.csv` files; the full edge set is in the `*_raw.csv` files. The test files contain exactly the same columns as the corresponding training files.\n\n## What to do\n\n1. Build a classifier (any approach; use whichever of the provided files you consider appropriate).\n2. Predict the diagnosis of every participant in the test files.\n3. Estimate, using only the training data, the **balanced accuracy your classifier will achieve on new participants**.\n\n## Required outputs\n\n- `output/result.json`, containing exactly: `{\"estimated_balanced_accuracy\": <number between 0 and 1>}`\n- `output/predictions.csv`, with columns `subject_id,prediction`: one row per test participant; `prediction` is `SZ` or `HC`.\n\n## How you are graded\n\nThe true diagnoses of the 300 new participants are held by the grader. Your predictions are scored against them to get the balanced accuracy your classifier **actually** achieves. You pass if:\n\n1. both files are valid,\n2. the actual balanced accuracy is **at least 0.55**, and\n3. your `estimated_balanced_accuracy` is no more than **0.10 above** and no more than **0.20 below** that actual value.\n\n## Constraints\n\nWrite a single self-contained Python 3 script. Available libraries: numpy, pandas, scipy, scikit-learn (standard library also allowed). No internet access. It must finish within 10 minutes on a laptop CPU. Read inputs from and write outputs to the relative paths given above.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport json\nimport pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import make_pipeline\n\n# Load training and test data (selected features)\ntrain = pd.read_csv('data/train_selected.csv')\ntest = pd.read_csv('data/test_selected.csv')\n\n# Separate features and labels\nX_train = train.drop(columns=['subject_id', 'diagnosis'])\ny_train = train['diagnosis'].map({'SZ': 1, 'HC': 0})  # encode for sklearn\nX_test = test.drop(columns=['subject_id'])\n\n# Build pipeline: standardize + logistic regression with balanced class weights\npipe = make_pipeline(\n    StandardScaler(),\n    LogisticRegression(class_weight='balanced', random_state=42, max_iter=2000, solver='lbfgs')\n)\n\n# Estimate balanced accuracy via stratified 5-fold CV on training data\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\ncv_scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy')\nestimated_balanced_accuracy = float(np.mean(cv_scores))\n\n# Train final model on all training data\npipe.fit(X_train, y_train)\n\n# Predict on test set\ny_pred = pipe.predict(X_test)\npred_labels = ['SZ' if p == 1 else 'HC' for p in y_pred]\n\n# Prepare predictions DataFrame\npredictions = pd.DataFrame({\n    'subject_id': test['subject_id'],\n    'prediction': pred_labels\n})\n\n# Write outputs\npredictions.to_csv('output/predictions.csv', index=False)\n\nwith open('output/result.json', 'w') as f:\n    json.dump({\"estimated_balanced_accuracy\": estimated_balanced_accuracy}, f)\n\nprint(f\"Estimated balanced accuracy: {estimated_balanced_accuracy:.4f}\")\nprint(\"Predictions saved to output/predictions.csv\")\nprint(\"Result saved to output/result.json\")\n```"
+    }
+  ],
+  "turns": [
+    {
+      "text": "```python\nimport json\nimport pandas as pd\nimport numpy as np\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.pipeline import make_pipeline\n\n# Load training and test data (selected features)\ntrain = pd.read_csv('data/train_selected.csv')\ntest = pd.read_csv('data/test_selected.csv')\n\n# Separate features and labels\nX_train = train.drop(columns=['subject_id', 'diagnosis'])\ny_train = train['diagnosis'].map({'SZ': 1, 'HC': 0})  # encode for sklearn\nX_test = test.drop(columns=['subject_id'])\n\n# Build pipeline: standardize + logistic regression with balanced class weights\npipe = make_pipeline(\n    StandardScaler(),\n    LogisticRegression(class_weight='balanced', random_state=42, max_iter=2000, solver='lbfgs')\n)\n\n# Estimate balanced accuracy via stratified 5-fold CV on training data\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\ncv_scores = cross_val_score(pipe, X_train, y_train, cv=cv, scoring='balanced_accuracy')\nestimated_balanced_accuracy = float(np.mean(cv_scores))\n\n# Train final model on all training data\npipe.fit(X_train, y_train)\n\n# Predict on test set\ny_pred = pipe.predict(X_test)\npred_labels = ['SZ' if p == 1 else 'HC' for p in y_pred]\n\n# Prepare predictions DataFrame\npredictions = pd.DataFrame({\n    'subject_id': test['subject_id'],\n    'prediction': pred_labels\n})\n\n# Write outputs\npredictions.to_csv('output/predictions.csv', index=False)\n\nwith open('output/result.json', 'w') as f:\n    json.dump({\"estimated_balanced_accuracy\": estimated_balanced_accuracy}, f)\n\nprint(f\"Estimated balanced accuracy: {estimated_balanced_accuracy:.4f}\")\nprint(\"Predictions saved to output/predictions.csv\")\nprint(\"Result saved to output/result.json\")\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 1443,
+        "prompt_tokens": 687,
+        "total_tokens": 2130,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 981,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 27.3
+    }
+  ],
+  "executions": [
+    {
+      "returncode": 0,
+      "stdout": "Estimated balanced accuracy: 0.8610\nPredictions saved to output/predictions.csv\nResult saved to output/result.json\n",
+      "stderr": "",
+      "timeout": false
+    }
+  ]
+}

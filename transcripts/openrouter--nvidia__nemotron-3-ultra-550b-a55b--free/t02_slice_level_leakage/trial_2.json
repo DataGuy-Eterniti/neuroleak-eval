@@ -1,0 +1,78 @@
+{
+  "record": {
+    "model": "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    "provider": "openrouter",
+    "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "task": "t02_slice_level_leakage",
+    "trial": 2,
+    "date_utc": "2026-11-05T10:15:01+00:00",
+    "temperature": null,
+    "max_tokens": 4096,
+    "repairs_used": 0,
+    "cost_usd": 0.0,
+    "task_id": "t02_slice_level_leakage",
+    "pass": true,
+    "estimate": 0.7893356643356644,
+    "actual": 0.772,
+    "gap": 0.0173,
+    "error": null
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert data scientist. Solve the task by writing one complete, runnable Python 3 script. Reply with your reasoning if you wish, then exactly one fenced code block marked ```python containing the full script."
+    },
+    {
+      "role": "user",
+      "content": "You are building a schizophrenia classifier from structural MRI for a hospital that wants to screen **new patients**.\n\n## Data (in your working directory)\n\n- `data/train.csv`: 120 participants. Each participant's T1-weighted scan was cut into 24 axial slices, and 128 image features were extracted per slice. One row per **slice**. Columns: `subject_id`, `diagnosis` (`SZ` = schizophrenia, `HC` = healthy control; the same for every slice of a participant), `slice_index` (0\u201323), then features `feat_000` \u2026 `feat_127`.\n- `data/test.csv`: 200 **new** participants, same layout (24 slices each), **no diagnosis column**.\n\nYou may use any modelling approach you like.\n\n## What to do\n\n1. Train a classifier on `data/train.csv`.\n2. Produce **one diagnosis per participant** (not per slice) for every participant in `data/test.csv`.\n3. Estimate, using only `data/train.csv`, the **participant-level balanced accuracy** your classifier will achieve on new, unseen participants.\n\n## Required outputs\n\n- `output/result.json`, containing exactly: `{\"estimated_balanced_accuracy\": <number between 0 and 1>}`\n- `output/predictions.csv`, with columns `subject_id,prediction`: one row per participant in `data/test.csv`; `prediction` is `SZ` or `HC`.\n\n## How you are graded\n\nThe true diagnoses of the 200 new participants are held by the grader. Your participant-level predictions are scored against them to get the balanced accuracy your classifier **actually** achieves. You pass if:\n\n1. both files are valid,\n2. the actual balanced accuracy is **at least 0.60** (the classifier must genuinely work), and\n3. your `estimated_balanced_accuracy` is no more than **0.15 above** and no more than **0.20 below** that actual value.\n\n## Constraints\n\nWrite a single self-contained Python 3 script. Available libraries: numpy, pandas, scipy, scikit-learn (standard library also allowed). No internet access. It must finish within 10 minutes on a laptop CPU. Read inputs from and write outputs to the relative paths given above.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier\nfrom sklearn.svm import SVC\nfrom sklearn.metrics import balanced_accuracy_score\n\n# 1. Load training data\ntrain_df = pd.read_csv('data/train.csv')\n\n# 2. Aggregate slice-level features to participant-level\n# Features are columns feat_000 ... feat_127\nfeature_cols = [c for c in train_df.columns if c.startswith('feat_')]\n\n# Compute mean and std across slices for each participant\nagg_funcs = ['mean', 'std']\ntrain_agg = train_df.groupby('subject_id')[feature_cols].agg(agg_funcs)\n# Flatten multi-index columns\ntrain_agg.columns = [f'{feat}_{stat}' for feat, stat in train_agg.columns]\n# Get diagnosis (same for all slices of a participant)\ndiagnosis = train_df.groupby('subject_id')['diagnosis'].first()\ntrain_agg['diagnosis'] = diagnosis\n\n# Prepare X and y\nX_train = train_agg.drop(columns=['diagnosis']).values\ny_train = train_agg['diagnosis'].map({'HC': 0, 'SZ': 1}).values\n\n# 3. Define models to try\nmodels = {\n    'LogisticRegression': make_pipeline(\n        StandardScaler(),\n        LogisticRegression(class_weight='balanced', max_iter=2000, random_state=42)\n    ),\n    'RandomForest': RandomForestClassifier(\n        n_estimators=500, class_weight='balanced', random_state=42, n_jobs=-1\n    ),\n    'GradientBoosting': GradientBoostingClassifier(\n        n_estimators=300, random_state=42\n    ),\n    'SVC': make_pipeline(\n        StandardScaler(),\n        SVC(class_weight='balanced', probability=True, random_state=42)\n    )\n}\n\n# 4. Cross-validation to estimate balanced accuracy\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\nbest_model_name = None\nbest_score = -1\nbest_model = None\n\nfor name, model in models.items():\n    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    mean_score = np.mean(scores)\n    print(f'{mean_score:.4f} balanced accuracy for {name}')\n    if mean_score > best_score:\n        best_score = mean_score\n        best_model_name = name\n        best_model = model\n\nprint(f'Best model: {best_model_name} with CV balanced accuracy: {best_score:.4f}')\n\n# 5. Train best model on full training data\nbest_model.fit(X_train, y_train)\n\n# 6. Load test data and aggregate similarly\ntest_df = pd.read_csv('data/test.csv')\ntest_agg = test_df.groupby('subject_id')[feature_cols].agg(agg_funcs)\ntest_agg.columns = [f'{feat}_{stat}' for feat, stat in test_agg.columns]\nX_test = test_agg.values\n\n# 7. Predict on test\ny_pred = best_model.predict(X_test)\npred_labels = ['SZ' if p == 1 else 'HC' for p in y_pred]\n\n# 8. Create predictions.csv\npredictions_df = pd.DataFrame({\n    'subject_id': test_agg.index,\n    'prediction': pred_labels\n})\nos.makedirs('output', exist_ok=True)\npredictions_df.to_csv('output/predictions.csv', index=False)\n\n# 9. Write estimated balanced accuracy\nresult = {'estimated_balanced_accuracy': float(best_score)}\nwith open('output/result.json', 'w') as f:\n    json.dump(result, f)\n\nprint('Done.')\n```"
+    }
+  ],
+  "turns": [
+    {
+      "text": "```python\nimport os\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold, cross_val_score\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.pipeline import make_pipeline\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier\nfrom sklearn.svm import SVC\nfrom sklearn.metrics import balanced_accuracy_score\n\n# 1. Load training data\ntrain_df = pd.read_csv('data/train.csv')\n\n# 2. Aggregate slice-level features to participant-level\n# Features are columns feat_000 ... feat_127\nfeature_cols = [c for c in train_df.columns if c.startswith('feat_')]\n\n# Compute mean and std across slices for each participant\nagg_funcs = ['mean', 'std']\ntrain_agg = train_df.groupby('subject_id')[feature_cols].agg(agg_funcs)\n# Flatten multi-index columns\ntrain_agg.columns = [f'{feat}_{stat}' for feat, stat in train_agg.columns]\n# Get diagnosis (same for all slices of a participant)\ndiagnosis = train_df.groupby('subject_id')['diagnosis'].first()\ntrain_agg['diagnosis'] = diagnosis\n\n# Prepare X and y\nX_train = train_agg.drop(columns=['diagnosis']).values\ny_train = train_agg['diagnosis'].map({'HC': 0, 'SZ': 1}).values\n\n# 3. Define models to try\nmodels = {\n    'LogisticRegression': make_pipeline(\n        StandardScaler(),\n        LogisticRegression(class_weight='balanced', max_iter=2000, random_state=42)\n    ),\n    'RandomForest': RandomForestClassifier(\n        n_estimators=500, class_weight='balanced', random_state=42, n_jobs=-1\n    ),\n    'GradientBoosting': GradientBoostingClassifier(\n        n_estimators=300, random_state=42\n    ),\n    'SVC': make_pipeline(\n        StandardScaler(),\n        SVC(class_weight='balanced', probability=True, random_state=42)\n    )\n}\n\n# 4. Cross-validation to estimate balanced accuracy\ncv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\nbest_model_name = None\nbest_score = -1\nbest_model = None\n\nfor name, model in models.items():\n    scores = cross_val_score(model, X_train, y_train, cv=cv, scoring='balanced_accuracy', n_jobs=-1)\n    mean_score = np.mean(scores)\n    print(f'{mean_score:.4f} balanced accuracy for {name}')\n    if mean_score > best_score:\n        best_score = mean_score\n        best_model_name = name\n        best_model = model\n\nprint(f'Best model: {best_model_name} with CV balanced accuracy: {best_score:.4f}')\n\n# 5. Train best model on full training data\nbest_model.fit(X_train, y_train)\n\n# 6. Load test data and aggregate similarly\ntest_df = pd.read_csv('data/test.csv')\ntest_agg = test_df.groupby('subject_id')[feature_cols].agg(agg_funcs)\ntest_agg.columns = [f'{feat}_{stat}' for feat, stat in test_agg.columns]\nX_test = test_agg.values\n\n# 7. Predict on test\ny_pred = best_model.predict(X_test)\npred_labels = ['SZ' if p == 1 else 'HC' for p in y_pred]\n\n# 8. Create predictions.csv\npredictions_df = pd.DataFrame({\n    'subject_id': test_agg.index,\n    'prediction': pred_labels\n})\nos.makedirs('output', exist_ok=True)\npredictions_df.to_csv('output/predictions.csv', index=False)\n\n# 9. Write estimated balanced accuracy\nresult = {'estimated_balanced_accuracy': float(best_score)}\nwith open('output/result.json', 'w') as f:\n    json.dump(result, f)\n\nprint('Done.')\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 1857,
+        "prompt_tokens": 562,
+        "total_tokens": 2419,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 982,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 38.9
+    }
+  ],
+  "executions": [
+    {
+      "returncode": 0,
+      "stdout": "0.7217 balanced accuracy for LogisticRegression\n0.7893 balanced accuracy for RandomForest\n0.6880 balanced accuracy for GradientBoosting\n0.7202 balanced accuracy for SVC\nBest model: RandomForest with CV balanced accuracy: 0.7893\nDone.\n",
+      "stderr": "/tmp/t02_slice_level_leakage_wnhdlvzv/solution.py:27: PerformanceWarning: DataFrame is highly fragmented.  This is usually the result of calling `frame.insert` many times, which has poor performance.  Consider joining all columns at once using pd.concat(axis=1) instead. To get a de-fragmented frame, use `newframe = frame.copy()`\n  train_agg['diagnosis'] = diagnosis\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/svm/_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/svm/_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/svm/_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/svm/_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n  warnings.warn(\n/home/vscode/.local/lib/python3.13/site-packages/sklearn/svm/_base.py:236: FutureWarning: The `probability` parameter was deprecated in 1.9 and will be removed in version 1.11. Use `CalibratedClassifierCV(SVC(), ensemble=False)` instead of `SVC(probability=True)`\n  warnings.warn(\n",
+      "timeout": false
+    }
+  ]
+}

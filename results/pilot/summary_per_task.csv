@@ -1,0 +1,7 @@
+model,task,trials,passes,mean_estimate,mean_actual,mean_gap,errors,pass_rate,pass^k,pass@k
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t01_feature_selection_leakage,2,2,0.5103174603174603,0.4976,0.0127,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t02_slice_level_leakage,2,2,0.7543414918414919,0.8109,-0.05655,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t03_repeat_scans,2,2,0.6373388386975345,0.5754,0.062,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t04_preselected_features,2,2,0.5042540792540793,0.6105,-0.10619999999999999,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t05_treatment_leakage,1,1,0.73406162464986,0.72,0.0141,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t06_oversampling_before_cv,1,0,0.5166666666666667,0.515,0.0017,1,0.0,0,0

@@ -1,0 +1,13 @@
+model,task,trials,passes,mean_estimate,mean_actual,mean_gap,errors,pass_rate,pass^k,pass@k
+groq:openai/gpt-oss-120b,t01_feature_selection_leakage,3,3,0.5103174603174603,0.4976,0.012699999999999998,0,1.0,1,1
+groq:openai/gpt-oss-120b,t02_slice_level_leakage,3,3,0.7513597513597513,0.7311666666666667,0.020233333333333336,0,1.0,1,1
+groq:openai/gpt-oss-120b,t03_repeat_scans,3,3,0.631055429701057,0.5814333333333334,0.0496,0,1.0,1,1
+groq:openai/gpt-oss-120b,t04_preselected_features,3,0,0.869114219114219,0.6082333333333333,0.2609333333333333,0,0.0,0,0
+groq:openai/gpt-oss-120b,t05_treatment_leakage,3,2,0.8036632430750078,0.64,0.16366666666666665,1,0.6666666666666666,0,1
+groq:openai/gpt-oss-120b,t06_oversampling_before_cv,3,0,0.5111111111111112,0.5133333333333333,-0.0022,3,0.0,0,0
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t01_feature_selection_leakage,3,3,0.49945767195767193,0.4976,0.0018333333333333326,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t02_slice_level_leakage,3,3,0.8254273504273505,0.7529333333333333,0.07246666666666667,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t03_repeat_scans,3,3,0.6731894253089906,0.5899333333333333,0.0833,0,1.0,1,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t04_preselected_features,3,1,0.6685897435897435,0.57565,0.093,1,0.3333333333333333,0,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t05_treatment_leakage,3,1,0.6275116713352008,0.645,-0.0175,2,0.3333333333333333,0,1
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t06_oversampling_before_cv,1,0,0.7806739926739926,0.63,0.1507,0,0.0,0,0

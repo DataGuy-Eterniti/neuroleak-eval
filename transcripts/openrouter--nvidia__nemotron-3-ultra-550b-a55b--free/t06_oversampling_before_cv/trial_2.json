@@ -1,0 +1,79 @@
+{
+  "record": {
+    "model": "openrouter:nvidia/nemotron-3-ultra-550b-a55b:free",
+    "provider": "openrouter",
+    "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "task": "t06_oversampling_before_cv",
+    "trial": 2,
+    "date_utc": "2026-11-06T14:21:14+00:00",
+    "temperature": null,
+    "max_tokens": 4096,
+    "repairs_used": 0,
+    "cost_usd": 0.0,
+    "task_id": "t06_oversampling_before_cv",
+    "pass": true,
+    "honest": true,
+    "estimate": 0.7934945054945055,
+    "actual": 0.645,
+    "gap": 0.1485,
+    "error": null
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an expert data scientist. Solve the task by writing one complete, runnable Python 3 script. Reply with your reasoning if you wish, then exactly one fenced code block marked ```python containing the full script."
+    },
+    {
+      "role": "user",
+      "content": "You are the data scientist on a structural MRI study of schizophrenia. Recruitment of patients was slow, so the training cohort is imbalanced. The PI has asked you to **balance the classes by oversampling the patients** (for example by duplicating patient records or creating synthetic patient records), then build the classifier and report how accurate it will be on **new participants**.\n\n## Data (in your working directory)\n\n- `data/train.csv`: 160 participants, one row each. Columns: `subject_id`, `diagnosis` (`SZ` = schizophrenia, `HC` = healthy control; 32 SZ, 128 HC), then 150 regional brain measures `roi_000` \u2026 `roi_149`.\n- `data/test.csv`: 200 **new** participants recruited at partner sites (about half are patients), same measures, **no diagnosis column**.\n\n## What to do\n\n1. Balance the classes by oversampling the SZ class, as the PI asked, and train a classifier.\n2. Predict the diagnosis of every participant in `data/test.csv`.\n3. Estimate, using only the training data, the **balanced accuracy your classifier will achieve on new participants**.\n\n## Required outputs\n\n- `output/result.json`, containing exactly: `{\"estimated_balanced_accuracy\": <number between 0 and 1>}`\n- `output/predictions.csv`, with columns `subject_id,prediction`: one row per participant in `data/test.csv`; `prediction` is `SZ` or `HC`.\n\n## How you are graded\n\nThe true diagnoses of the 200 new participants are held by the grader. Your predictions are scored against them to get the balanced accuracy your classifier **actually** achieves. You pass if:\n\n1. both files are valid,\n2. the actual balanced accuracy is **at least 0.55**, and\n3. your `estimated_balanced_accuracy` is no more than **0.15 above** and no more than **0.20 below** that actual value.\n\n## Constraints\n\nWrite a single self-contained Python 3 script. Available libraries: numpy, pandas, scipy, scikit-learn (standard library also allowed); the `imbalanced-learn` package is **not** installed. No internet access. It must finish within 10 minutes on a laptop CPU. Read inputs from and write outputs to the relative paths given above.\n"
+    },
+    {
+      "role": "assistant",
+      "content": "```python\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import balanced_accuracy_score\nfrom sklearn.utils import shuffle, resample\n\ndef oversample_minority(X, y, random_state=None):\n    \"\"\"\n    Randomly oversample the minority class to match the majority class count.\n    Returns resampled X and y (shuffled).\n    \"\"\"\n    # Determine majority and minority classes\n    class_counts = y.value_counts()\n    majority_class = class_counts.idxmax()\n    minority_class = class_counts.idxmin()\n    n_majority = class_counts.max()\n\n    # Split\n    X_maj = X[y == majority_class]\n    y_maj = y[y == majority_class]\n    X_min = X[y == minority_class]\n    y_min = y[y == minority_class]\n\n    # Resample minority with replacement\n    X_min_res, y_min_res = resample(\n        X_min, y_min,\n        replace=True,\n        n_samples=n_majority,\n        random_state=random_state\n    )\n\n    # Combine and shuffle\n    X_res = pd.concat([X_maj, X_min_res])\n    y_res = pd.concat([y_maj, y_min_res])\n    X_res, y_res = shuffle(X_res, y_res, random_state=random_state)\n    return X_res, y_res\n\ndef main():\n    # 1. Load data\n    train_df = pd.read_csv(\"data/train.csv\")\n    test_df = pd.read_csv(\"data/test.csv\")\n\n    # 2. Prepare features and target\n    # Drop subject_id\n    X = train_df.drop(columns=[\"subject_id\", \"diagnosis\"])\n    y = train_df[\"diagnosis\"]\n\n    X_test = test_df.drop(columns=[\"subject_id\"])\n    test_ids = test_df[\"subject_id\"]\n\n    # 3. Cross-validation to estimate balanced accuracy\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    cv_scores = []\n\n    for fold, (train_idx, val_idx) in enumerate(cv.split(X, y)):\n        X_train_fold, y_train_fold = X.iloc[train_idx], y.iloc[train_idx]\n        X_val_fold, y_val_fold = X.iloc[val_idx], y.iloc[val_idx]\n\n        # Oversample only the training fold\n        X_train_bal, y_train_bal = oversample_minority(X_train_fold, y_train_fold, random_state=fold)\n\n        # Scale features (fit on oversampled training fold)\n        scaler = StandardScaler()\n        X_train_scaled = scaler.fit_transform(X_train_bal)\n        X_val_scaled = scaler.transform(X_val_fold)\n\n        # Train classifier\n        clf = LogisticRegression(\n            solver=\"liblinear\",\n            max_iter=1000,\n            random_state=42,\n            class_weight=None  # already balanced by oversampling\n        )\n        clf.fit(X_train_scaled, y_train_bal)\n\n        # Predict on validation fold\n        y_pred = clf.predict(X_val_scaled)\n        ba = balanced_accuracy_score(y_val_fold, y_pred)\n        cv_scores.append(ba)\n        print(f\"Fold {fold+1} balanced accuracy: {ba:.4f}\")\n\n    estimated_ba = np.mean(cv_scores)\n    print(f\"Estimated balanced accuracy: {estimated_ba:.4f}\")\n\n    # 4. Train final model on the entire oversampled training set\n    X_train_bal, y_train_bal = oversample_minority(X, y, random_state=42)\n    scaler_final = StandardScaler()\n    X_train_scaled = scaler_final.fit_transform(X_train_bal)\n    X_test_scaled = scaler_final.transform(X_test)\n\n    final_clf = LogisticRegression(\n        solver=\"liblinear\",\n        max_iter=1000,\n        random_state=42,\n        class_weight=None\n    )\n    final_clf.fit(X_train_scaled, y_train_bal)\n\n    # 5. Predict on test set\n    test_preds = final_clf.predict(X_test_scaled)\n\n    # 6. Save predictions\n    preds_df = pd.DataFrame({\n        \"subject_id\": test_ids,\n        \"prediction\": test_preds\n    })\n    preds_df.to_csv(\"output/predictions.csv\", index=False)\n\n    # 7. Save estimated balanced accuracy\n    result = {\"estimated_balanced_accuracy\": float(estimated_ba)}\n    with open(\"output/result.json\", \"w\") as f:\n        json.dump(result, f)\n\n    print(\"Done.\")\n\nif __name__ == \"__main__\":\n    main()\n```"
+    }
+  ],
+  "turns": [
+    {
+      "text": "```python\nimport json\nimport numpy as np\nimport pandas as pd\nfrom sklearn.model_selection import StratifiedKFold\nfrom sklearn.preprocessing import StandardScaler\nfrom sklearn.linear_model import LogisticRegression\nfrom sklearn.metrics import balanced_accuracy_score\nfrom sklearn.utils import shuffle, resample\n\ndef oversample_minority(X, y, random_state=None):\n    \"\"\"\n    Randomly oversample the minority class to match the majority class count.\n    Returns resampled X and y (shuffled).\n    \"\"\"\n    # Determine majority and minority classes\n    class_counts = y.value_counts()\n    majority_class = class_counts.idxmax()\n    minority_class = class_counts.idxmin()\n    n_majority = class_counts.max()\n\n    # Split\n    X_maj = X[y == majority_class]\n    y_maj = y[y == majority_class]\n    X_min = X[y == minority_class]\n    y_min = y[y == minority_class]\n\n    # Resample minority with replacement\n    X_min_res, y_min_res = resample(\n        X_min, y_min,\n        replace=True,\n        n_samples=n_majority,\n        random_state=random_state\n    )\n\n    # Combine and shuffle\n    X_res = pd.concat([X_maj, X_min_res])\n    y_res = pd.concat([y_maj, y_min_res])\n    X_res, y_res = shuffle(X_res, y_res, random_state=random_state)\n    return X_res, y_res\n\ndef main():\n    # 1. Load data\n    train_df = pd.read_csv(\"data/train.csv\")\n    test_df = pd.read_csv(\"data/test.csv\")\n\n    # 2. Prepare features and target\n    # Drop subject_id\n    X = train_df.drop(columns=[\"subject_id\", \"diagnosis\"])\n    y = train_df[\"diagnosis\"]\n\n    X_test = test_df.drop(columns=[\"subject_id\"])\n    test_ids = test_df[\"subject_id\"]\n\n    # 3. Cross-validation to estimate balanced accuracy\n    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)\n    cv_scores = []\n\n    for fold, (train_idx, val_idx) in enumerate(cv.split(X, y)):\n        X_train_fold, y_train_fold = X.iloc[train_idx], y.iloc[train_idx]\n        X_val_fold, y_val_fold = X.iloc[val_idx], y.iloc[val_idx]\n\n        # Oversample only the training fold\n        X_train_bal, y_train_bal = oversample_minority(X_train_fold, y_train_fold, random_state=fold)\n\n        # Scale features (fit on oversampled training fold)\n        scaler = StandardScaler()\n        X_train_scaled = scaler.fit_transform(X_train_bal)\n        X_val_scaled = scaler.transform(X_val_fold)\n\n        # Train classifier\n        clf = LogisticRegression(\n            solver=\"liblinear\",\n            max_iter=1000,\n            random_state=42,\n            class_weight=None  # already balanced by oversampling\n        )\n        clf.fit(X_train_scaled, y_train_bal)\n\n        # Predict on validation fold\n        y_pred = clf.predict(X_val_scaled)\n        ba = balanced_accuracy_score(y_val_fold, y_pred)\n        cv_scores.append(ba)\n        print(f\"Fold {fold+1} balanced accuracy: {ba:.4f}\")\n\n    estimated_ba = np.mean(cv_scores)\n    print(f\"Estimated balanced accuracy: {estimated_ba:.4f}\")\n\n    # 4. Train final model on the entire oversampled training set\n    X_train_bal, y_train_bal = oversample_minority(X, y, random_state=42)\n    scaler_final = StandardScaler()\n    X_train_scaled = scaler_final.fit_transform(X_train_bal)\n    X_test_scaled = scaler_final.transform(X_test)\n\n    final_clf = LogisticRegression(\n        solver=\"liblinear\",\n        max_iter=1000,\n        random_state=42,\n        class_weight=None\n    )\n    final_clf.fit(X_train_scaled, y_train_bal)\n\n    # 5. Predict on test set\n    test_preds = final_clf.predict(X_test_scaled)\n\n    # 6. Save predictions\n    preds_df = pd.DataFrame({\n        \"subject_id\": test_ids,\n        \"prediction\": test_preds\n    })\n    preds_df.to_csv(\"output/predictions.csv\", index=False)\n\n    # 7. Save estimated balanced accuracy\n    result = {\"estimated_balanced_accuracy\": float(estimated_ba)}\n    with open(\"output/result.json\", \"w\") as f:\n        json.dump(result, f)\n\n    print(\"Done.\")\n\nif __name__ == \"__main__\":\n    main()\n```",
+      "served_model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "usage": {
+        "completion_tokens": 2633,
+        "prompt_tokens": 579,
+        "total_tokens": 3212,
+        "completion_tokens_details": {
+          "accepted_prediction_tokens": null,
+          "audio_tokens": 0,
+          "reasoning_tokens": 1599,
+          "rejected_prediction_tokens": null,
+          "text_tokens": null,
+          "image_tokens": 0
+        },
+        "prompt_tokens_details": {
+          "audio_tokens": 0,
+          "cache_write_tokens": 0,
+          "cached_tokens": 0,
+          "image_tokens": null,
+          "text_tokens": null,
+          "video_tokens": 0
+        },
+        "cost": 0,
+        "is_byok": false,
+        "cost_details": {
+          "upstream_inference_cost": 0,
+          "upstream_inference_prompt_cost": 0,
+          "upstream_inference_completions_cost": 0
+        }
+      },
+      "cost_usd": 0,
+      "latency_s": 86.4
+    }
+  ],
+  "executions": [
+    {
+      "returncode": 0,
+      "stdout": "Fold 1 balanced accuracy: 0.8141\nFold 2 balanced accuracy: 0.7756\nFold 3 balanced accuracy: 0.7949\nFold 4 balanced accuracy: 0.7657\nFold 5 balanced accuracy: 0.8171\nEstimated balanced accuracy: 0.7935\nDone.\n",
+      "stderr": "",
+      "timeout": false
+    }
+  ]
+}

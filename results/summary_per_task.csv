@@ -10,4 +10,4 @@ openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t02_slice_level_leakage,3,3,3,
 openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t03_repeat_scans,3,3,3,0.6538655969634232,0.5993666666666667,0.05456666666666667,0,1.0,1,1
 openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t04_preselected_features,3,1,1,0.7390248640248641,0.5983666666666667,0.1407,0,0.3333333333333333,0,1
 openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t05_treatment_leakage,3,2,3,0.6706567071272954,0.6566666666666666,0.013999999999999999,1,0.6666666666666666,0,1
-openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t06_oversampling_before_cv,1,0,0,0.7806739926739926,0.63,0.1507,0,0.0,0,0
+openrouter:nvidia/nemotron-3-ultra-550b-a55b:free,t06_oversampling_before_cv,3,2,2,0.7879389499389499,0.6383333333333333,0.14959999999999998,0,0.6666666666666666,0,1

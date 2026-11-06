@@ -12,6 +12,8 @@ Models are written as  provider:model-id  (no prefix = openrouter). Free tiers:
     openrouter:<id>  OpenRouter ("...:free" models)   -> OPENROUTER_API_KEY
     groq:<id>        Groq                             -> GROQ_API_KEY
     nvidia:<id>      NVIDIA build.nvidia.com          -> NVIDIA_API_KEY
+    cerebras:<id>    Cerebras                         -> CEREBRAS_API_KEY
+    custom:<id>      any other OpenAI-compatible API  -> CUSTOM_BASE_URL + CUSTOM_API_KEY
 
 Examples:
     python run_eval.py --models gemini:gemini-2.5-flash --trials 1 --sleep 10
@@ -58,6 +60,8 @@ PROVIDERS = {  # name: (OpenAI-compatible base URL, environment variable holding
     "gemini": ("https://generativelanguage.googleapis.com/v1beta/openai/", "GEMINI_API_KEY"),
     "groq": ("https://api.groq.com/openai/v1", "GROQ_API_KEY"),
     "nvidia": ("https://integrate.api.nvidia.com/v1", "NVIDIA_API_KEY"),
+    "cerebras": ("https://api.cerebras.ai/v1", "CEREBRAS_API_KEY"),
+    "custom": (None, "CUSTOM_API_KEY"),  # base URL read from CUSTOM_BASE_URL
 }
 
 
@@ -71,6 +75,10 @@ def split_model(spec: str) -> tuple[str, str]:
 def make_client(provider: str):
     from openai import OpenAI
     base, env = PROVIDERS[provider]
+    if base is None:
+        base = os.environ.get("CUSTOM_BASE_URL")
+        if not base:
+            raise SystemExit("Set CUSTOM_BASE_URL (and CUSTOM_API_KEY) to use provider 'custom'.")
     key = os.environ.get(env)
     if not key:
         raise SystemExit(f"Set {env} (Codespaces secret or .env) to use provider '{provider}'.")
@@ -148,8 +156,16 @@ def summarize():
     if not path.exists():
         print("no runs yet"); return
     df = pd.DataFrame([json.loads(l) for l in path.read_text().splitlines() if l.strip()])
+    if "honest" not in df:
+        df["honest"] = None
+    # Older rows (before the 'honest' field existed): recompute from the gap.
+    from evalkit.grader import TOLERANCE
+    miss = df["honest"].isna() & df["gap"].notna()
+    df.loc[miss, "honest"] = [TOLERANCE[t][0] <= g <= TOLERANCE[t][1]
+                              for t, g in zip(df.loc[miss, "task"], df.loc[miss, "gap"])]
     per_task = (df.groupby(["model", "task"])
                   .agg(trials=("pass", "size"), passes=("pass", "sum"),
+                       honest=("honest", lambda s: s.fillna(False).astype(bool).sum()),
                        mean_estimate=("estimate", "mean"), mean_actual=("actual", "mean"),
                        mean_gap=("gap", "mean"), errors=("error", lambda s: s.notna().sum()))
                   .reset_index())
@@ -195,11 +211,19 @@ def main():
     tasks = [t.strip() for t in a.tasks.split(",") if t.strip()]
     if not models:
         raise SystemExit("Pass --models")
+    done = set()
+    if (RESULTS / "runs.jsonl").exists():  # resume: skip trials already recorded
+        for l in (RESULTS / "runs.jsonl").read_text().splitlines():
+            if l.strip():
+                r = json.loads(l); done.add((r["model"], r["task"], r["trial"]))
     for spec in models:
         client = make_client(split_model(spec)[0])
         for task in tasks:
             for trial in range(1, a.trials + 1):
-                print(f"{spec} | {task} | trial {trial}")
+                if (spec, task, trial) in done:
+                    print(f"{spec} | {task} | trial {trial}  (already done, skipped)")
+                    continue
+                print(f"{spec} | {task} | trial {trial}", flush=True)
                 try:
                     rec = run_trial(client, spec, task, trial, a)
                 except RuntimeError as e:  # provider failure, not a model failure
@@ -211,7 +235,7 @@ def main():
                     continue
                 if a.sleep:
                     time.sleep(a.sleep)
-                print(f"   pass={rec['pass']} estimate={rec['estimate']} actual={rec['actual']} "
+                print(f"   pass={rec['pass']} honest={rec.get('honest')} estimate={rec['estimate']} actual={rec['actual']} "
                       f"gap={rec['gap']} err={rec['error']} cost=${rec['cost_usd']}")
     summarize()
 

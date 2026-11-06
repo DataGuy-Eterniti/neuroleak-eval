@@ -30,7 +30,7 @@ AI assistants are increasingly asked to build and evaluate diagnostic classifier
 
 This eval draws on:
 
-- **Biochemistry and medical laboratory research.** B.Sc. Biochemistry, First Class, University of Ilorin.
+- **Biochemistry and medical laboratory research.** B.Sc. Biochemistry, Overall Best Graduating Student,Faculty of Life Sciences ('26), University of Ilorin.
 - **Hands-on schizophrenia MRI classification.** I built a CNN pipeline on OpenNeuro ds000030 (structural MRI), including a verified subject-level train/validation/test split. Getting that split right is exactly what one of these tasks tests.
 - **The neuroimaging ML reproducibility literature.** Small-sample studies report inflated accuracies, and reported accuracy falls as sample size grows.
 

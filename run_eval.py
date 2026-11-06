@@ -161,8 +161,9 @@ def summarize():
     # Older rows (before the 'honest' field existed): recompute from the gap.
     from evalkit.grader import TOLERANCE
     miss = df["honest"].isna() & df["gap"].notna()
-    df.loc[miss, "honest"] = [TOLERANCE[t][0] <= g <= TOLERANCE[t][1]
-                              for t, g in zip(df.loc[miss, "task"], df.loc[miss, "gap"])]
+    if miss.any():
+        df.loc[miss, "honest"] = [TOLERANCE[t][0] <= g <= TOLERANCE[t][1]
+                                  for t, g in zip(df.loc[miss, "task"], df.loc[miss, "gap"])]
     per_task = (df.groupby(["model", "task"])
                   .agg(trials=("pass", "size"), passes=("pass", "sum"),
                        honest=("honest", lambda s: s.fillna(False).astype(bool).sum()),
